@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}GST Tax Invoices · DakshinERP{% endblock %}
+{% block page_title %}GST Tax Invoices & Billing Desk{% endblock %}
+{% block body %}
+<div class="card">
+  <div class="card-header-row">
+    <div>
+      <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.2rem;">GST Tax Invoices Register</h2>
+      <p style="font-size: 0.82rem; color: var(--text-muted);">
+        Financial-year compliant invoices with HSN, GSTIN, place of supply, and credit note audit trail.
+      </p>
+    </div>
+    <div style="display:flex; gap:0.5rem;">
+      <a href="{{ url_for('reports.view', slug='sales-register') }}" class="btn secondary btn-sm">Sales Register Report →</a>
+      <a href="{{ url_for('reports.tally_export') }}" class="btn secondary btn-sm">Export Tally XML</a>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table>
+      <thead>
+        <tr>
+          <th>Invoice #</th>
+          <th>Date</th>
+          <th>Customer Account</th>
+          <th>Supply Type</th>
+          <th class="num">Taxable Value (₹)</th>
+          <th class="num">Total Tax (₹)</th>
+          <th class="num">Invoice Total (₹)</th>
+          <th style="text-align:center;">Dispatch Status</th>
+          <th style="text-align:right;">Actions & Documents</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for i in invoices %}
+        <tr>
+          <td style="font-family:var(--font-mono); font-weight:700; color:var(--primary);">{{ i.invoice_no }}</td>
+          <td style="font-size:0.85rem; color:var(--text-secondary);">{{ i.date }}</td>
+          <td><b>{{ i.customer }}</b></td>
+          <td>
+            <span class="badge {% if i.supply_type == 'intra' %}submitted{% else %}invoiced{% endif %}">
+              {{ 'Intra (CGST+SGST)' if i.supply_type == 'intra' else 'Inter (IGST)' }}
+            </span>
+          </td>
+          <td class="num">{{ i.taxable_paise|money }}</td>
+          <td class="num">{{ (i.cgst_paise + i.sgst_paise + i.igst_paise)|money }}</td>
+          <td class="num" style="font-weight:700;">₹{{ i.total_paise|money }}</td>
+          <td style="text-align:center;">
+            <span class="badge {{ i.status }}">{{ i.status }}</span>
+            {% if i.dispatched_on %}
+              <div style="font-size:0.75rem; color:#059669; font-weight:600; margin-top:0.2rem;">
+                ✓ Dispatched {{ i.dispatched_on }}
+              </div>
+            {% else %}
+              <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.2rem;">
+                Pending Dispatch
+              </div>
+            {% endif %}
+          </td>
+          <td style="text-align:right;">
+            <div style="display:inline-flex; gap:0.4rem; align-items:center;">
+              <a class="btn secondary btn-sm" href="{{ url_for('admin.invoice_pdf_view', iid=i.id) }}" target="_blank" title="Download GST Tax Invoice PDF">
+                📄 PDF
+              </a>
+              {% if share.get(i.id) %}
+              <a class="btn secondary btn-sm" href="{{ share[i.id].whatsapp }}" target="_blank" title="Share via WhatsApp">
+                💬 WhatsApp
+              </a>
+              {% endif %}
+            </div>
+
+            {% if g.user.role == 'admin' and i.status == 'posted' %}
+            <form method="post" action="{{ url_for('admin.invoice_cancel', iid=i.id) }}" style="display:inline-flex; gap:0.3rem; margin-top:0.4rem; justify-content:flex-end;">
+              <input name="reason" placeholder="Reason for credit note" style="font-size:0.75rem; padding:0.25rem 0.5rem; width:130px;" required>
+              <button type="submit" class="btn danger btn-sm" style="font-size:0.75rem;">Issue Credit Note</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="9" style="text-align:center; padding:2rem; color:var(--text-muted);">
+            No GST invoices generated yet.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem;">
+    ℹ️ <b>Audit Compliance:</b> Posted tax invoices are never deleted. Cancelling an invoice automatically records a credit note in accounts and reverses stock in <code>stock_ledger</code> if goods were dispatched.
+  </p>
+</div>
+{% endblock %}

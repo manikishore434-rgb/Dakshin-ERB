@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% block title %}Payments & Collections · DakshinERP{% endblock %}
+{% block page_title %}Customer Payments & Receivables Desk{% endblock %}
+{% block body %}
+<!-- Record Payment Form -->
+<div class="card" style="border-top:3px solid var(--primary);">
+  <h2 style="font-size:1.25rem; font-weight:700; margin-bottom:0.25rem;">Record Customer Payment Collection</h2>
+  <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:1.25rem;">
+    Record customer receipts against specific tax invoices or general account. Automatically updates receivables and customer balance.
+  </p>
+
+  <form method="post">
+    <div class="row">
+      <div class="form-group">
+        <label for="cust_p">Customer Account *</label>
+        <select id="cust_p" name="customer_id" required>
+          {% for c in customers %}
+          <option value="{{ c.id }}">{{ c.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="inv_p">Apply to Specific Invoice</label>
+        <select id="inv_p" name="invoice_id">
+          <option value="">(On account / Oldest invoice first)</option>
+          {% for r in open_invoices %}
+          <option value="{{ r.invoice.id }}">
+            {{ r.invoice.customer }} · {{ r.invoice.invoice_no }} · Due ₹{{ r.outstanding|money }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="pay_amt">Amount Collected (₹) *</label>
+        <input id="pay_amt" name="amount" type="number" step="0.01" min="0.01" placeholder="e.g. 4000.00" required>
+      </div>
+
+      <div class="form-group">
+        <label for="pay_date">Receipt Date *</label>
+        <input id="pay_date" name="date" type="date" value="{{ today() }}" required>
+      </div>
+
+      <div class="form-group">
+        <label for="pay_mode">Payment Mode</label>
+        <select id="pay_mode" name="mode">
+          <option>UPI</option>
+          <option>Bank Transfer (NEFT/RTGS)</option>
+          <option>Cash</option>
+          <option>Cheque</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="pay_ref">Reference / UTR #</label>
+        <input id="pay_ref" name="reference" placeholder="e.g. UTR12345678">
+      </div>
+
+      <div class="auto">
+        <button type="submit" class="btn success" style="padding:0.65rem 1.25rem;">
+          Save Receipt
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- Outstanding Invoices Table -->
+<div class="card">
+  <div class="card-header-row">
+    <div>
+      <h3 class="card-title">Open Invoices & Receivables Ageing</h3>
+      <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.2rem;">
+        Unpaid balances tracked with invoice ageing in days.
+      </p>
+    </div>
+    <a href="{{ url_for('reports.view', slug='outstanding') }}" class="btn secondary btn-sm">Full Ageing Report →</a>
+  </div>
+
+  <div class="table-responsive">
+    <table>
+      <thead>
+        <tr>
+          <th>Customer Account</th>
+          <th>Invoice #</th>
+          <th class="num">Invoice Value (₹)</th>
+          <th class="num">Amount Collected (₹)</th>
+          <th class="num">Current Outstanding (₹)</th>
+          <th style="text-align:center;">Age (Days)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in open_invoices %}
+        <tr>
+          <td><b>{{ r.invoice.customer }}</b></td>
+          <td style="font-family:var(--font-mono); font-weight:600; color:var(--primary);">{{ r.invoice.invoice_no }}</td>
+          <td class="num">₹{{ r.invoice.total_paise|money }}</td>
+          <td class="num" style="color:#059669;">₹{{ r.paid|money }}</td>
+          <td class="num" style="font-weight:700; color:#dc2626;">₹{{ r.outstanding|money }}</td>
+          <td style="text-align:center;">
+            <span class="badge {% if r.age_days > 60 %}flag{% elif r.age_days > 30 %}submitted{% else %}ok{% endif %}">
+              {{ r.age_days }} days
+            </span>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6" style="text-align:center; padding:2rem; color:var(--text-muted);">
+            All invoices fully cleared. No outstanding dues!
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Recent Payment Collections -->
+<div class="card">
+  <div class="card-header-row">
+    <h3 class="card-title">Recent Payment Collections Log</h3>
+  </div>
+
+  <div class="table-responsive">
+    <table>
+      <thead>
+        <tr>
+          <th>Receipt Date</th>
+          <th>Customer Account</th>
+          <th>Applied Against</th>
+          <th>Payment Mode & Reference</th>
+          <th class="num">Amount Received (₹)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in payments %}
+        <tr>
+          <td style="font-size:0.85rem; color:var(--text-secondary);">{{ p.date }}</td>
+          <td><b>{{ p.customer }}</b></td>
+          <td style="font-family:var(--font-mono); font-size:0.85rem;">{{ p.invoice_no or 'On Account' }}</td>
+          <td style="font-size:0.85rem;">
+            <span class="badge info">{{ p.mode }}</span>
+            <span style="color:var(--text-muted); margin-left:0.3rem;">{{ p.reference }}</span>
+          </td>
+          <td class="num" style="font-weight:700; color:#059669;">₹{{ p.amount_paise|money }}</td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="5" style="text-align:center; padding:2rem; color:var(--text-muted);">
+            No payments recorded yet.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

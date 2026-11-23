@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% block title %}GPS Field Visit Check-in · DakshinERP{% endblock %}
+{% block page_title %}GPS Sales Visit Log{% endblock %}
+{% block body %}
+<div class="row">
+  <div class="card" style="flex: 1 1 380px;">
+    <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.25rem;">Field Visit Check-In</h2>
+    <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+      Record proof of customer visit with device GPS coordinates and notes. Location is only read when you click check-in.
+    </p>
+
+    <form method="post" id="visitForm">
+      <div class="form-group">
+        <label for="cust_select">Customer Visited (Optional)</label>
+        <select id="cust_select" name="customer_id">
+          <option value="">-- Unassigned / Prospect --</option>
+          {% for c in customers %}
+          <option value="{{ c.id }}">{{ c.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="visit_note">Meeting Purpose & Observation Notes</label>
+        <textarea id="visit_note" name="note" rows="3" placeholder="e.g. Stock replenished, discussed festival bulk scheme, retailer requested credit terms"></textarea>
+      </div>
+
+      <input type="hidden" name="latitude" id="lat">
+      <input type="hidden" name="longitude" id="lon">
+
+      <button type="button" id="checkin" class="btn" style="width: 100%; padding: 0.75rem;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        Capture Geolocation & Check In
+      </button>
+
+      <div id="status" style="margin-top: 0.75rem; font-size: 0.82rem; font-weight: 600; text-align: center;"></div>
+    </form>
+  </div>
+
+  <div class="card" style="flex: 2 1 500px;">
+    <div class="card-header-row">
+      <div>
+        <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.2rem;">Visit History & GPS Verification</h2>
+        <p style="font-size: 0.82rem; color: var(--text-muted);">Timestamped audit trail with OpenStreetMap verification links.</p>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>Customer Account</th>
+            <th>GPS Coordinates</th>
+            <th>Observation Notes</th>
+            <th style="text-align:center;">Map Link</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for v in visits %}
+          <tr>
+            <td style="font-size:0.82rem; color:var(--text-secondary); white-space:nowrap;">{{ v.visited_at[:16] }}</td>
+            <td><b>{{ v.customer or 'Prospect / Market' }}</b></td>
+            <td style="font-family:var(--font-mono); font-size:0.8rem; color:var(--text-muted);">
+              {{ "%.4f"|format(v.latitude) }}, {{ "%.4f"|format(v.longitude) }}
+            </td>
+            <td style="font-size:0.85rem;">{{ v.note or '-' }}</td>
+            <td style="text-align:center;">
+              <a target="_blank" rel="noopener noreferrer" href="https://www.openstreetmap.org/?mlat={{ v.latitude }}&mlon={{ v.longitude }}#map=16/{{ v.latitude }}/{{ v.longitude }}" class="btn secondary btn-sm" style="font-size:0.75rem;">
+                📍 Map
+              </a>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="5" style="text-align:center; padding:2rem; color:var(--text-muted);">
+              No check-ins recorded yet.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('checkin').onclick = () => {
+    const s = document.getElementById('status');
+    if (!navigator.geolocation) {
+      s.textContent = '❌ Geolocation is not supported by your browser.';
+      s.style.color = 'var(--status-danger-text)';
+      return;
+    }
+    s.textContent = '📡 Acquiring GPS satellite fix…';
+    s.style.color = 'var(--primary)';
+    navigator.geolocation.getCurrentPosition(
+      p => {
+        document.getElementById('lat').value = p.coords.latitude;
+        document.getElementById('lon').value = p.coords.longitude;
+        s.textContent = '✅ Location fixed (' + p.coords.latitude.toFixed(4) + ', ' + p.coords.longitude.toFixed(4) + '). Saving visit…';
+        s.style.color = 'var(--status-success-text)';
+        document.getElementById('visitForm').submit();
+      },
+      e => {
+        s.textContent = '❌ Location error: ' + e.message;
+        s.style.color = 'var(--status-danger-text)';
+      },
+      { enableHighAccuracy: true, timeout: 15000 }
+    );
+  };
+</script>
+{% endblock %}

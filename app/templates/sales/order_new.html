@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}New Field Order · DakshinERP{% endblock %}
+{% block page_title %}New Field Order Entry{% endblock %}
+{% block body %}
+<div class="card" style="max-width: 760px; margin: 0 auto; box-shadow: var(--shadow-md);">
+  <div class="card-header-row" style="margin-bottom: 0.75rem;">
+    <div>
+      <h2 style="font-size: 1.35rem; font-weight: 700; margin-bottom: 0.2rem;">Create Customer Order</h2>
+      <p style="font-size: 0.82rem; color: var(--text-muted);">
+        Direct submission to factory billing desk. Automatically cached offline if network is disconnected.
+      </p>
+    </div>
+    <div id="net-status-badge">
+      <span class="badge ok" id="net">🟢 Online · Realtime Sync</span>
+    </div>
+  </div>
+
+  <div id="queue"></div>
+  <div id="msg"></div>
+
+  <div id="form" style="margin-top: 1rem;">
+    <div class="form-group">
+      <label for="customer">Select Retailer / Distributor *</label>
+      <select id="customer" style="font-weight: 500; font-size: 0.95rem;"></select>
+    </div>
+
+    <div style="margin-bottom: 1.25rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <label style="margin: 0;">Order Products & Quantities *</label>
+        <button type="button" id="add" class="btn secondary btn-sm" style="font-size: 0.8rem;">
+          + Add Product Line
+        </button>
+      </div>
+
+      <div id="lines"></div>
+    </div>
+
+    <div class="form-group">
+      <label for="notes">Delivery / Billing Instructions (Optional)</label>
+      <input id="notes" placeholder="e.g. Deliver by morning route, cash on delivery, etc.">
+    </div>
+
+    <div style="background: var(--bg-surface-elevated); padding: 1rem 1.25rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Order Value (Pre-Tax)</div>
+        <div id="total" style="font-size: 1.25rem; font-weight: 800; color: var(--text-primary); font-family: var(--font-mono);">₹0.00</div>
+      </div>
+      <div style="font-size: 0.78rem; color: var(--text-muted); text-align: right;">
+        GST (5%) will be calculated<br>by factory invoice engine
+      </div>
+    </div>
+
+    <button type="button" id="submit" class="btn" style="width: 100%; padding: 0.8rem; font-size: 1rem; font-weight: 700;">
+      Submit Order to Factory Desk →
+    </button>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='order.js') }}"></script>
+<script>
+  window.addEventListener('online', () => {
+    const net = document.getElementById('net');
+    if (net) { net.textContent = '🟢 Online · Realtime Sync'; net.className = 'badge ok'; }
+  });
+  window.addEventListener('offline', () => {
+    const net = document.getElementById('net');
+    if (net) { net.textContent = '🟡 Offline Mode (Saved locally)'; net.className = 'badge submitted'; }
+  });
+</script>
+{% endblock %}

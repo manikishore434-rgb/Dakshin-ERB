@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+{% block title %}Master Data Management · DakshinERP{% endblock %}
+{% block page_title %}Enterprise Master Data Catalog{% endblock %}
+{% block body %}
+
+<!-- BOM Section -->
+<div class="card" style="border-top:3px solid var(--primary);">
+  <div class="card-header-row">
+    <div>
+      <h2 style="font-size:1.25rem; font-weight:700;">Bill of Materials (BOM) & Recipe Standards</h2>
+      <p style="font-size:0.82rem; color:var(--text-muted);">
+        Standard recipe formulations per production batch. Automatically expands ingredients and expected yields.
+      </p>
+    </div>
+  </div>
+
+  {% for b in boms %}
+  <div style="background:var(--bg-surface-elevated); border:1px solid var(--border-color); border-radius:var(--radius-sm); padding:1rem; margin-bottom:1.25rem;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+      <h3 style="font-size:1.05rem; font-weight:700; color:var(--primary);">{{ b.name }}</h3>
+      <span class="badge ok">1 Batch Standard Yield: {{ b.yield_milli|qty }} Packets</span>
+    </div>
+    <div class="table-responsive" style="margin-bottom:0;">
+      <table>
+        <thead>
+          <tr>
+            <th>Ingredient / Material Name</th>
+            <th class="num">Standard Qty per Batch</th>
+            <th>Base Unit</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for l in b.lines %}
+          <tr>
+            <td><b>{{ l.name }}</b></td>
+            <td class="num" style="font-weight:700;">{{ l.qty_milli|qty }}</td>
+            <td>{{ l.base_unit }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endfor %}
+
+  <div style="background:var(--bg-surface-subtle); border:1px dashed var(--border-color); border-radius:var(--radius-sm); padding:1rem; margin-top:1rem;">
+    <h4 style="font-size:0.92rem; font-weight:700; margin-bottom:0.6rem;">Update or Add BOM Line</h4>
+    <form method="post" action="{{ url_for('admin.masters_add', what='bom') }}">
+      <div class="row">
+        <div class="form-group">
+          <label for="bom_prod">Finished Product</label>
+          <select id="bom_prod" name="product_id">
+            {% for p in finished %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="bom_yield">Expected Yield (Packets/Batch)</label>
+          <input id="bom_yield" name="yield" type="number" step="any" placeholder="Keep current if empty">
+        </div>
+        <div class="form-group">
+          <label for="bom_item">Raw Material / Packaging</label>
+          <select id="bom_item" name="item_id">
+            <option value="">-- Select Material --</option>
+            {% for i in inputs %}<option value="{{ i.id }}">{{ i.name }} ({{ i.base_unit }})</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="bom_qty">Qty per Batch (0 to remove)</label>
+          <input id="bom_qty" name="qty" type="number" step="any" placeholder="e.g. 40">
+        </div>
+        <div class="auto">
+          <button type="submit" class="btn" style="padding:0.6rem 1rem;">Update BOM</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Item Catalog Table -->
+<div class="card">
+  <div class="card-header-row">
+    <div>
+      <h2 style="font-size:1.25rem; font-weight:700;">Item Catalog (Materials, Packaging & Finished Goods)</h2>
+      <p style="font-size:0.82rem; color:var(--text-muted);">Master registry of inventory items with HSN codes, tax rates, and reorder levels.</p>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table>
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Item Name</th>
+          <th>Classification</th>
+          <th>Base Unit</th>
+          <th>HSN Code</th>
+          <th class="num">GST %</th>
+          <th class="num">Default Price (₹)</th>
+          <th class="num">Packets/Carton</th>
+          <th class="num">Safety Reorder</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for i in items %}
+        <tr>
+          <td style="font-family:var(--font-mono); font-weight:700; color:var(--text-secondary);">{{ i.code }}</td>
+          <td><b>{{ i.name }}</b></td>
+          <td>
+            <span class="badge {% if i.kind == 'finished' %}approved{% elif i.kind == 'raw' %}submitted{% else %}invoiced{% endif %}">
+              {{ i.kind }}
+            </span>
+          </td>
+          <td>{{ i.base_unit }}</td>
+          <td style="font-family:var(--font-mono); font-size:0.8rem;">{{ i.hsn or '-' }}</td>
+          <td class="num">{{ (i.gst_bp / 100)|int if i.kind == 'finished' else '-' }}%</td>
+          <td class="num">{{ '₹' + i.price_paise|money if i.price_paise else '-' }}</td>
+          <td class="num">{{ i.carton_size or '-' }}</td>
+          <td class="num">{{ i.reorder_level_milli|qty if i.reorder_level_milli else '-' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div style="background:var(--bg-surface-elevated); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--border-color); margin-top:1rem;">
+    <h4 style="font-size:0.92rem; font-weight:700; margin-bottom:0.75rem;">Add New Item</h4>
+    <form method="post" action="{{ url_for('admin.masters_add', what='item') }}">
+      <div class="row">
+        <div class="form-group"><label>Code *</label><input name="code" placeholder="e.g. FG-NEW" required></div>
+        <div class="form-group"><label>Name *</label><input name="name" placeholder="e.g. Ribbon Pakoda 200g" required></div>
+        <div class="form-group">
+          <label>Classification *</label>
+          <select name="kind">
+            <option value="raw">Raw Material</option>
+            <option value="packaging">Packaging</option>
+            <option value="finished">Finished Product</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Base Unit *</label>
+          <select name="base_unit"><option>kg</option><option>l</option><option>piece</option><option>packet</option></select>
+        </div>
+        <div class="form-group"><label>HSN</label><input name="hsn" placeholder="21069099"></div>
+        <div class="form-group"><label>GST %</label><input name="gst" type="number" step="0.01" placeholder="5"></div>
+        <div class="form-group"><label>Price (₹)</label><input name="price" type="number" step="0.01" placeholder="50.00"></div>
+        <div class="form-group"><label>Packets/Carton</label><input name="carton_size" type="number" placeholder="20"></div>
+        <div class="form-group"><label>Reorder Alert</label><input name="reorder" type="number" step="any" placeholder="100"></div>
+        <div class="auto"><button type="submit" class="btn" style="padding:0.6rem 1rem;">Add Item</button></div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Customer & Customer Specific Pricing -->
+<div class="row">
+  <div class="card" style="flex:1 1 450px;">
+    <h3 style="font-size:1.15rem; font-weight:700; margin-bottom:0.75rem;">Customer Accounts</h3>
+    <div class="table-responsive">
+      <table>
+        <thead><tr><th>Customer</th><th>Type</th><th>GSTIN</th><th>State</th><th>Salesman</th></tr></thead>
+        <tbody>
+          {% for c in customers %}
+          <tr>
+            <td><b>{{ c.name }}</b></td>
+            <td><span class="badge info">{{ c.type }}</span></td>
+            <td style="font-family:var(--font-mono); font-size:0.78rem;">{{ c.gstin or 'Unregistered' }}</td>
+            <td>{{ c.state_code }} {{ c.state_name }}</td>
+            <td>{{ c.salesman or '-' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <form method="post" action="{{ url_for('admin.masters_add', what='customer') }}" style="margin-top:1rem;">
+      <h4 style="font-size:0.88rem; font-weight:700; margin-bottom:0.5rem;">Add Customer</h4>
+      <div class="row">
+        <div class="form-group"><label>Name *</label><input name="name" required></div>
+        <div class="form-group"><label>Type</label><select name="type"><option>retailer</option><option>distributor</option></select></div>
+        <div class="form-group"><label>GSTIN</label><input name="gstin" placeholder="33AAAAA0000A1Z5"></div>
+        <div class="form-group"><label>State Code</label><input name="state_code" placeholder="33" required></div>
+        <div class="form-group"><label>State Name</label><input name="state_name" placeholder="Tamil Nadu" required></div>
+        <div class="form-group">
+          <label>Salesman</label>
+          <select name="salesman_id"><option value="">-</option>{% for s in salesmen %}<option value="{{ s.id }}">{{ s.full_name }}</option>{% endfor %}</select>
+        </div>
+        <div class="auto"><button type="submit" class="btn secondary btn-sm">Add Customer</button></div>
+      </div>
+    </form>
+  </div>
+
+  <div class="card" style="flex:1 1 350px;">
+    <h3 style="font-size:1.15rem; font-weight:700; margin-bottom:0.75rem;">Customer-Specific Pricing</h3>
+    <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:1rem;">
+      Override default price list for specific wholesale distributors or contracted retailers.
+    </p>
+
+    <form method="post" action="{{ url_for('admin.masters_add', what='customer-price') }}">
+      <div class="form-group">
+        <label>Customer Account</label>
+        <select name="customer_id">
+          {% for c in customers %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Product</label>
+        <select name="item_id">
+          {% for p in finished %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Special Price (₹)</label>
+        <input name="price" type="number" step="0.01" placeholder="e.g. 48.00" required>
+      </div>
+      <button type="submit" class="btn" style="width:100%;">Save Special Price</button>
+    </form>
+
+    <div style="margin-top:2rem; padding-top:1rem; border-top:1px solid var(--border-color);">
+      <h4 style="font-size:0.92rem; font-weight:700; margin-bottom:0.5rem;">Variance Tolerance Alert Setting</h4>
+      <form method="post" action="{{ url_for('admin.masters_add', what='tolerance') }}">
+        <div class="row">
+          <div class="form-group">
+            <label>Flag Variances Beyond (%)</label>
+            <input name="pct" type="number" step="0.01" value="{{ tolerance|int / 100 }}" required>
+          </div>
+          <div class="auto">
+            <button type="submit" class="btn secondary btn-sm">Save Tolerance</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
