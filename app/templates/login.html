@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% block title %}Sign In · DakshinERP Food Manufacturing OS{% endblock %}
+{% block page_title %}Enterprise Authentication{% endblock %}
+{% block body %}
+<div style="max-width: 900px; margin: 1.5rem auto;">
+  <div style="text-align: center; margin-bottom: 2rem;">
+    <!-- Brand Logo Large -->
+    <svg style="width: 54px; height: 54px; margin-bottom: 0.75rem; border-radius: 14px; box-shadow: 0 4px 14px rgba(217,119,6,0.3);" viewBox="0 0 48 48" fill="none">
+      <rect width="48" height="48" rx="14" fill="url(#loginGrad)" />
+      <path d="M24 10L35 16.5V29.5L24 36L13 29.5V16.5L24 10Z" stroke="#ffffff" stroke-width="2.5" stroke-linejoin="round" />
+      <path d="M24 16V30M24 18C21 16 18 19 18 21C21 23 24 21 24 21M24 22C27 20 30 23 30 25C27 27 24 25 24 25" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+      <circle cx="24" cy="31" r="2" fill="#fbbf24" />
+      <defs>
+        <linearGradient id="loginGrad" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#b45309" />
+          <stop offset="0.6" stop-color="#d97706" />
+          <stop offset="1" stop-color="#059669" />
+        </linearGradient>
+      </defs>
+    </svg>
+    <h1 style="font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; color: var(--text-primary);">
+      Dakshin<span style="color: var(--primary);">ERP</span>
+    </h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 0.25rem;">
+      Order-to-Audit Food Manufacturing Operating System · Centre for Digital Infrastructure, NIT Tiruchirappalli
+    </p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 2rem; align-items: start;">
+    <!-- Login Form Card -->
+    <div class="card" style="box-shadow: var(--shadow-lg); border-top: 4px solid var(--primary); padding: 2rem;">
+      <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">Sign In to Factory OS</h2>
+      <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.5rem;">
+        Enter your credentials to access your designated role portal.
+      </p>
+
+      <form method="post">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input id="username" name="username" type="text" placeholder="e.g. admin or salesman_a" autofocus autocapitalize="none" required>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" placeholder="••••••••" required>
+        </div>
+
+        <button type="submit" class="btn" style="width: 100%; padding: 0.75rem; font-size: 0.95rem;">
+          Sign In to Dashboard →
+        </button>
+      </form>
+    </div>
+
+    <!-- Quick Role Login Selector for Evaluators -->
+    <div class="card" style="background: var(--bg-surface-elevated); border-style: dashed;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+        <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-primary);">1-Click Persona Login</h3>
+        <span class="badge info">Demo Mode</span>
+      </div>
+      <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 1rem;">
+        Select any role below to prefill credentials (password is <code>demo123</code>) and enter:
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+        <button type="button" class="btn secondary" style="justify-content: space-between; padding: 0.55rem 0.85rem;" onclick="quickLogin('admin', 'demo123')">
+          <div style="text-align: left;">
+            <div style="font-weight: 700; font-size: 0.86rem;">Factory Admin</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">Incoming orders, GST invoices, dispatch, payments</div>
+          </div>
+          <span class="badge approved">admin</span>
+        </button>
+
+        <button type="button" class="btn secondary" style="justify-content: space-between; padding: 0.55rem 0.85rem;" onclick="quickLogin('production', 'demo123')">
+          <div style="text-align: left;">
+            <div style="font-weight: 700; font-size: 0.86rem;">Production Supervisor</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">Material receipts, batch BOM runs, yield variance</div>
+          </div>
+          <span class="badge submitted">production</span>
+        </button>
+
+        <button type="button" class="btn secondary" style="justify-content: space-between; padding: 0.55rem 0.85rem;" onclick="quickLogin('salesman_a', 'demo123')">
+          <div style="text-align: left;">
+            <div style="font-weight: 700; font-size: 0.86rem;">Salesman A (Tamil Nadu)</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">Mobile field ordering, offline sync, GPS visits</div>
+          </div>
+          <span class="badge ok">salesman_a</span>
+        </button>
+
+        <button type="button" class="btn secondary" style="justify-content: space-between; padding: 0.55rem 0.85rem;" onclick="quickLogin('salesman_b', 'demo123')">
+          <div style="text-align: left;">
+            <div style="font-weight: 700; font-size: 0.86rem;">Salesman B (Out-of-State)</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">Distributor orders, shortage handling, IGST billing</div>
+          </div>
+          <span class="badge ok">salesman_b</span>
+        </button>
+
+        <button type="button" class="btn secondary" style="justify-content: space-between; padding: 0.55rem 0.85rem;" onclick="quickLogin('accountant', 'demo123')">
+          <div style="text-align: left;">
+            <div style="font-weight: 700; font-size: 0.86rem;">Accountant / Auditor</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">GSTR-1, stock ledger, aging, Excel & Tally exports</div>
+          </div>
+          <span class="badge invoiced">accountant</span>
+        </button>
+
+        <button type="button" class="btn secondary" style="justify-content: space-between; padding: 0.55rem 0.85rem;" onclick="quickLogin('owner', 'demo123')">
+          <div style="text-align: left;">
+            <div style="font-weight: 700; font-size: 0.86rem;">Executive Owner</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">Real-time revenue, cost per packet, margin analytics</div>
+          </div>
+          <span class="badge approved">owner</span>
+        </button>
+      </div>
+
+      <!-- Public Benchmark Shortcut -->
+      <div style="margin-top: 1.25rem; text-align: center; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+        <a href="{{ url_for('reports.benchmark_view') }}" style="font-size: 0.85rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem;">
+          🔍 View Live Section 5 Benchmark Verification →
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function quickLogin(u, p) {
+    document.getElementById('username').value = u;
+    document.getElementById('password').value = p;
+    document.querySelector('form').submit();
+  }
+</script>
+{% endblock %}

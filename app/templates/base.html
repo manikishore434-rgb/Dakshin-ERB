@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>{% block title %}DakshinERP · Smart Food Manufacturing OS{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <meta name="theme-color" content="#d97706">
+  <script>
+    // Immediate theme initialization to prevent flash
+    const savedTheme = localStorage.getItem('dakshin_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  </script>
+</head>
+<body>
+<div class="app-shell">
+  {% if g.user %}
+  <!-- Enterprise Sidebar Navigation -->
+  <aside class="app-sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a class="brand-container" href="/">
+        <!-- Custom Artisanal Food ERP SVG Emblem -->
+        <svg class="brand-logo-svg" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="48" height="48" rx="12" fill="url(#brandGrad)" />
+          <!-- Hexagon Gear & Wheat / Grain Motif -->
+          <path d="M24 10L35 16.5V29.5L24 36L13 29.5V16.5L24 10Z" stroke="#ffffff" stroke-width="2.5" stroke-linejoin="round" />
+          <path d="M24 16V30M24 18C21 16 18 19 18 21C21 23 24 21 24 21M24 22C27 20 30 23 30 25C27 27 24 25 24 25" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+          <circle cx="24" cy="31" r="2" fill="#fbbf24" />
+          <defs>
+            <linearGradient id="brandGrad" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#b45309" />
+              <stop offset="0.6" stop-color="#d97706" />
+              <stop offset="1" stop-color="#059669" />
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="brand-text">
+          <span class="brand-name">Dakshin<span>ERP</span></span>
+          <span class="brand-sub">NIT Trichy · CDI</span>
+        </div>
+      </a>
+    </div>
+
+    <!-- User Persona Badge -->
+    <div class="sidebar-user-pill">
+      <div class="user-avatar">
+        {{ g.user.full_name[0] }}
+      </div>
+      <div class="user-meta">
+        <span class="user-name">{{ g.user.full_name }}</span>
+        <span class="user-role-badge">{{ g.user.role }}</span>
+      </div>
+    </div>
+
+    <!-- Navigation Menu Items -->
+    <nav class="sidebar-nav">
+      {% set user_role = g.user.role %}
+
+      <!-- Core Modules -->
+      <div class="nav-section-title">Core Operations</div>
+
+      {% if user_role in ('admin', 'owner') %}
+      <a class="nav-link {% if request.path == url_for('reports.dashboard') %}active{% endif %}" href="{{ url_for('reports.dashboard') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span>{{ tr("Dashboard") }}</span>
+      </a>
+      {% endif %}
+
+      <a class="nav-link {% if request.path == url_for('reports.benchmark_view') %}active{% endif %}" href="{{ url_for('reports.benchmark_view') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span>Benchmark Matrix</span>
+        <span class="nav-pill-count" style="background:rgba(16,185,129,0.2); color:#34d399;">14/14</span>
+      </a>
+
+      <!-- Sales Module -->
+      {% if user_role == 'salesman' %}
+      <div class="nav-section-title">Field Sales</div>
+      <a class="nav-link {% if request.path == url_for('sales.order_new') %}active{% endif %}" href="{{ url_for('sales.order_new') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        <span>{{ tr("New order") }}</span>
+      </a>
+      <a class="nav-link {% if request.path == url_for('sales.my_orders') %}active{% endif %}" href="{{ url_for('sales.my_orders') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <span>{{ tr("My orders") }}</span>
+      </a>
+      <a class="nav-link {% if request.path == url_for('sales.my_sales') %}active{% endif %}" href="{{ url_for('sales.my_sales') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <span>{{ tr("My sales") }}</span>
+      </a>
+      <a class="nav-link {% if request.path == url_for('sales.visit_log') %}active{% endif %}" href="{{ url_for('sales.visit_log') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <span>{{ tr("Sales visit GPS log") }}</span>
+      </a>
+      {% endif %}
+
+      <!-- Admin Desk -->
+      {% if user_role == 'admin' %}
+      <div class="nav-section-title">Order-to-Cash Desk</div>
+      <a class="nav-link {% if request.path == url_for('admin.orders') %}active{% endif %}" href="{{ url_for('admin.orders') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <span>{{ tr("Orders") }} (Verify)</span>
+      </a>
+      <a class="nav-link {% if request.path == url_for('admin.invoices') %}active{% endif %}" href="{{ url_for('admin.invoices') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span>{{ tr("Invoices") }} (GST)</span>
+      </a>
+      <a class="nav-link {% if request.path == url_for('admin.payments') %}active{% endif %}" href="{{ url_for('admin.payments') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        <span>{{ tr("Payments") }} & Dues</span>
+      </a>
+      <a class="nav-link {% if request.path == url_for('admin.masters') %}active{% endif %}" href="{{ url_for('admin.masters') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        <span>{{ tr("Masters") }} Data</span>
+      </a>
+      {% endif %}
+
+      <!-- Production Floor -->
+      {% if user_role in ('production', 'admin') %}
+      <div class="nav-section-title">Production & Floor</div>
+      <a class="nav-link {% if request.path == url_for('production.runs') %}active{% endif %}" href="{{ url_for('production.runs') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 20h20M5 20V8l7 4V4l7 4v12"/></svg>
+        <span>Batch Runs (BOM)</span>
+      </a>
+      <a class="nav-link {% if request.path == url_for('production.run_new') %}active{% endif %}" href="{{ url_for('production.run_new') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        <span>Start New Run</span>
+      </a>
+      <a class="nav-link {% if request.path == url_for('production.purchases') %}active{% endif %}" href="{{ url_for('production.purchases') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        <span>Material Receipts</span>
+      </a>
+      {% endif %}
+
+      <!-- Audit & Compliance Reports -->
+      {% if user_role != 'salesman' %}
+      <div class="nav-section-title">Auditor & Accounts</div>
+      <a class="nav-link {% if request.path == url_for('reports.index') %}active{% endif %}" href="{{ url_for('reports.index') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span>Audit Reports Hub</span>
+      </a>
+      <a class="nav-link" href="{{ url_for('reports.view', slug='gst-summary') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>GST Outward (GSTR-1)</span>
+      </a>
+      <a class="nav-link" href="{{ url_for('reports.tally_export') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Tally Prime Export</span>
+      </a>
+      {% endif %}
+    </nav>
+
+    <!-- Sidebar Footer Controls -->
+    <div class="sidebar-footer">
+      <div class="sidebar-controls-row">
+        <!-- Theme Toggle -->
+        <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Light/Dark Theme">
+          <span id="theme-icon">🌙</span>
+          <span id="theme-label">Theme</span>
+        </button>
+        <!-- Language Switcher -->
+        <div style="font-size:0.75rem;">
+          <a href="{{ url_for('auth.language', lang='en') }}" style="color:{% if session.get('lang') != 'ta' %}#fbbf24{% else %}var(--sidebar-text){% endif %}; font-weight:600;">EN</a> |
+          <a href="{{ url_for('auth.language', lang='ta') }}" style="color:{% if session.get('lang') == 'ta' %}#fbbf24{% else %}var(--sidebar-text){% endif %}; font-weight:600;">தமிழ்</a>
+        </div>
+      </div>
+
+      <!-- Quick Switch Persona for Demo / Evaluator -->
+      <label style="font-size:0.7rem; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.15rem;">
+        Switch Persona (Demo)
+      </label>
+      <select class="role-switcher-select" onchange="if(this.value) window.location.href='/switch-role/' + this.value;">
+        <option value="">Switch Role…</option>
+        <option value="admin" {% if g.user.role == 'admin' %}selected{% endif %}>Factory Admin</option>
+        <option value="production" {% if g.user.role == 'production' %}selected{% endif %}>Production Supervisor</option>
+        <option value="salesman" {% if g.user.role == 'salesman' %}selected{% endif %}>Salesman</option>
+        <option value="accountant" {% if g.user.role == 'accountant' %}selected{% endif %}>Accountant / Auditor</option>
+        <option value="owner" {% if g.user.role == 'owner' %}selected{% endif %}>Executive Owner</option>
+      </select>
+
+      <a href="{{ url_for('auth.logout') }}" style="display:flex; align-items:center; gap:0.4rem; color:#ef4444; font-size:0.8rem; font-weight:600; padding:0.35rem 0;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        {{ tr("Log out") }}
+      </a>
+    </div>
+  </aside>
+  {% endif %}
+
+  <!-- Main View Container -->
+  <div class="app-main">
+    {% if g.user %}
+    <header class="app-topbar">
+      <div class="topbar-left">
+        <button type="button" class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+        <div class="page-title-group">
+          <h1 class="page-title">{% block page_title %}{{ tr("Dashboard") }}{% endblock %}</h1>
+          <span class="page-subtitle">Centre for Digital Infrastructure, NIT Tiruchirappalli</span>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <!-- Section 5 Benchmark Pill -->
+        <a href="{{ url_for('reports.benchmark_view') }}" class="benchmark-badge-btn" title="View Mandatory Section 5 Compliance Verification">
+          <div class="pulse-dot"></div>
+          <span class="label-text">NIT Benchmark:</span>
+          <span>14/14 PASS</span>
+        </a>
+
+        <!-- Dark/Light Theme Quick Toggle -->
+        <button type="button" class="btn secondary btn-sm" onclick="toggleTheme()" style="padding:0.35rem 0.65rem;" title="Toggle Theme">
+          <span class="theme-icon-top">🌓</span>
+        </button>
+      </div>
+    </header>
+    {% endif %}
+
+    <main class="content-container">
+      {% for cat, msg in get_flashed_messages(with_categories=true) %}
+      <div class="flash {{ cat }}">
+        {% if cat in ('ok', 'success') %}
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        {% elif cat == 'error' %}
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        {% else %}
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        {% endif %}
+        <span>{{ msg }}</span>
+      </div>
+      {% endfor %}
+
+      {% block body %}{% endblock %}
+    </main>
+
+    {% if g.user and g.user.role == 'salesman' %}
+    <!-- Mobile Field Bottom Navigation for Salesmen -->
+    <nav class="mobile-bottom-nav">
+      <a href="{{ url_for('sales.order_new') }}" class="mobile-nav-item {% if request.path == url_for('sales.order_new') %}active{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        <span>New Order</span>
+      </a>
+      <a href="{{ url_for('sales.my_orders') }}" class="mobile-nav-item {% if request.path == url_for('sales.my_orders') %}active{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+        <span>Orders</span>
+      </a>
+      <a href="{{ url_for('sales.visit_log') }}" class="mobile-nav-item {% if request.path == url_for('sales.visit_log') %}active{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <span>GPS Visit</span>
+      </a>
+      <a href="{{ url_for('sales.my_sales') }}" class="mobile-nav-item {% if request.path == url_for('sales.my_sales') %}active{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <span>Sales</span>
+      </a>
+      <a href="{{ url_for('reports.benchmark_view') }}" class="mobile-nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        <span>Benchmark</span>
+      </a>
+    </nav>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  function toggleTheme() {
+    const cur = document.documentElement.getAttribute('data-theme') || 'light';
+    const next = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('dakshin_theme', next);
+    const icon = document.getElementById('theme-icon');
+    if (icon) icon.textContent = next === 'dark' ? '☀️' : '🌙';
+  }
+
+  function toggleSidebar() {
+    const sb = document.getElementById('sidebar');
+    if (sb) sb.classList.toggle('open');
+  }
+
+  // Set initial icon
+  document.addEventListener('DOMContentLoaded', () => {
+    const cur = document.documentElement.getAttribute('data-theme') || 'light';
+    const icon = document.getElementById('theme-icon');
+    if (icon) icon.textContent = cur === 'dark' ? '☀️' : '🌙';
+  });
+</script>
+</body>
+</html>
