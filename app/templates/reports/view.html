@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} · Auditor Reports · DakshinERP{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block body %}
+<!-- Filter & Export Toolbar Card -->
+<form class="card" method="get" style="margin-bottom:1.5rem; border-top:3px solid var(--primary);">
+  <div class="card-header-row" style="margin-bottom:0.75rem;">
+    <div>
+      <h2 style="font-size:1.25rem; font-weight:700;">{{ title }}</h2>
+      <p style="font-size:0.82rem; color:var(--text-muted);">{{ rep.title }}</p>
+    </div>
+    <!-- Export Action Buttons -->
+    <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+      <a class="btn success btn-sm" href="?{{ request.query_string.decode() }}&fmt=xlsx" title="Export as Microsoft Excel">
+        📊 Excel (.xlsx)
+      </a>
+      <a class="btn secondary btn-sm" href="?{{ request.query_string.decode() }}&fmt=csv" title="Export as CSV">
+        📄 CSV
+      </a>
+      <a class="btn secondary btn-sm" href="?{{ request.query_string.decode() }}&fmt=pdf" target="_blank" title="Printable PDF Report">
+        🖨️ PDF
+      </a>
+    </div>
+  </div>
+
+  <div class="row" style="align-items:flex-end;">
+    <div class="form-group">
+      <label>From Date</label>
+      <input type="date" name="from" value="{{ f }}">
+    </div>
+    <div class="form-group">
+      <label>To Date</label>
+      <input type="date" name="to" value="{{ t }}">
+    </div>
+    {% if items %}
+    <div class="form-group" style="flex:2;">
+      <label>Filter by Item</label>
+      <select name="item_id">
+        <option value="">-- All Items with Movements --</option>
+        {% for i in items %}
+        <option value="{{ i.id }}" {{ 'selected' if p.item_id == i.id|string }}>{{ i.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% endif %}
+    <div class="auto">
+      <button type="submit" class="btn" style="padding:0.6rem 1.25rem;">Apply Date Filter</button>
+    </div>
+  </div>
+</form>
+
+<!-- Report Sections Table Render -->
+{% for s in rep.sections %}
+<div class="card">
+  <div class="card-header-row">
+    <h3 class="card-title">{{ s.name }}</h3>
+    <span style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">{{ s.rows|length }} Records</span>
+  </div>
+
+  <div class="table-responsive">
+    <table>
+      <thead>
+        <tr>
+          {% for c in s.columns %}
+          <th class="{{ 'num' if c[1] in ('money','qty','pct','int') }}">{{ c[0] }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in s.rows %}
+        <tr class="{{ 'flag-row' if 'VARIANCE' in row or 'FLAG' in row or 'short' in row }}">
+          {% for c in s.columns %}
+          <td class="{{ 'num' if c[1] in ('money','qty','pct','int') }}">
+            {% set val = rdisplay(c[1], row[loop.index0]) %}
+            {% if val == 'VARIANCE' or val == 'SHORT' %}
+              <span class="badge flag">{{ val }}</span>
+            {% elif val == 'OK' or val == 'COVERED' %}
+              <span class="badge ok">{{ val }}</span>
+            {% elif c[1] == 'money' and row[loop.index0] is not none %}
+              {% if row[loop.index0] < 0 %}
+                <span style="color:#dc2626;">-₹{{ (row[loop.index0]|abs)|money }}</span>
+              {% else %}
+                ₹{{ val }}
+              {% endif %}
+            {% else %}
+              {{ val }}
+            {% endif %}
+          </td>
+          {% endfor %}
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="{{ s.columns|length }}" style="text-align:center; padding:2rem; color:var(--text-muted);">
+            No records found for the selected period ({{ f }} to {{ t }}).
+          </td>
+        </tr>
+        {% endfor %}
+
+        {% if s.totals %}
+        <tr class="total">
+          {% for c in s.columns %}
+          <td class="{{ 'num' if c[1] in ('money','qty','pct','int') }}">
+            {% set tot = rdisplay(c[1], s.totals[loop.index0]) %}
+            {% if c[1] == 'money' and s.totals[loop.index0] is not none %}
+              ₹{{ tot }}
+            {% else %}
+              {{ tot }}
+            {% endif %}
+          </td>
+          {% endfor %}
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card" style="text-align:center; padding:3rem; color:var(--text-muted);">
+  No data sections returned for this report.
+</div>
+{% endfor %}
+
+<div style="margin-top:1rem; text-align:right;">
+  <a href="{{ url_for('reports.index') }}" class="btn secondary btn-sm">← Back to All Reports</a>
+</div>
+{% endblock %}

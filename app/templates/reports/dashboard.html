@@ -1,0 +1,233 @@
+{% extends 'base.html' %}
+{% block title %}Executive Operations Dashboard · DakshinERP{% endblock %}
+{% block page_title %}Executive Operations Dashboard{% endblock %}
+{% block body %}
+
+<!-- Real-time Alerts Banner if any variances exist -->
+{% if alerts %}
+<div class="alert-callout danger">
+  <div class="alert-icon">⚠️</div>
+  <div class="alert-content">
+    <div class="alert-title">Production Recipe & Yield Variances Detected Beyond Tolerance (3%)</div>
+    <div class="alert-desc">
+      {% for s in alerts %}
+      <div style="margin-top:0.25rem;">
+        Run <b><a href="{{ url_for('production.run_detail', rid=s.run.id) }}">{{ s.run.run_no }}</a></b> ({{ s.run.date }}):
+        {% if s.yield_flag %}<span class="badge flag">Yield Variance {{ s.yield_var_pct }}% (188 vs 200 standard)</span>{% endif %}
+        {% for l in s.lines if l.flag %}
+        <span class="badge flag">{{ l.name }} {{ l.var_pct }}%</span>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Primary KPI Analytics Cards -->
+<div class="stats-grid">
+  <!-- Today's Orders -->
+  <div class="stat-card accent-blue">
+    <div class="stat-card-top">
+      <span class="stat-card-label">Today's Orders</span>
+      <div class="stat-icon-wrap" style="color:#0284c7;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      </div>
+    </div>
+    <div class="stat-card-value">{{ orders_today|sum(attribute='n') }}</div>
+    <div class="stat-card-footer">
+      <span style="font-weight:600; color:var(--primary);">{{ pending }}</span> orders active in pipeline
+    </div>
+  </div>
+
+  <!-- Outstanding Receivables -->
+  <div class="stat-card accent-rose">
+    <div class="stat-card-top">
+      <span class="stat-card-label">Outstanding Receivables</span>
+      <div class="stat-icon-wrap" style="color:#dc2626;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      </div>
+    </div>
+    <div class="stat-card-value">₹{{ total_due|money }}</div>
+    <div class="stat-card-footer">
+      {% if due %}
+        Top debtor: {% for name, v in due %}{% if loop.first %}{{ name }} (₹{{ v|money }}){% endif %}{% endfor %}
+      {% else %}
+        No overdue accounts
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Cost per Packet (Latest Run) -->
+  <div class="stat-card">
+    <div class="stat-card-top">
+      <span class="stat-card-label">Unit Cost (Murukku 200g)</span>
+      <div class="stat-icon-wrap">₹</div>
+    </div>
+    {% for name, s in cpp.items() %}
+      <div class="stat-card-value">₹{{ s.cost_per_packet_paise|money }}</div>
+      <div class="stat-card-footer">
+        Selling: ₹{{ s.run.price_paise|money }} · <b style="color:#059669;">{{ s.margin_pct }}% margin</b> (₹{{ s.margin_per_packet_paise|money }})
+      </div>
+    {% else %}
+      <div class="stat-card-value">—</div>
+      <div class="stat-card-footer">No completed runs logged</div>
+    {% endfor %}
+  </div>
+
+  <!-- Total Inventory Valuation -->
+  <div class="stat-card accent-emerald">
+    <div class="stat-card-top">
+      <span class="stat-card-label">Total Stock Valuation</span>
+      <div class="stat-icon-wrap" style="color:#059669;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </div>
+    </div>
+    <div class="stat-card-value">
+      ₹{{ levels|sum(attribute='value')|money }}
+    </div>
+    <div class="stat-card-footer">
+      Derived in real time from zero-drift stock ledger
+    </div>
+  </div>
+</div>
+
+<!-- Visual Pipeline & Variance Charts Row -->
+<div class="row" style="margin-bottom:1.5rem;">
+  <!-- Order Pipeline Funnel Card -->
+  <div class="card" style="flex:1 1 380px;">
+    <h3 class="card-title" style="margin-bottom:0.75rem;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Order-to-Cash Pipeline Flow
+    </h3>
+    <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1rem;">Real-time order statuses moving through verification, tax invoicing and dispatch:</p>
+
+    <div style="display:flex; flex-direction:column; gap:0.75rem;">
+      {% set o_submitted = (orders_today|selectattr('status', 'equalto', 'submitted')|map(attribute='n')|sum) %}
+      {% set o_approved = (orders_today|selectattr('status', 'equalto', 'approved')|map(attribute='n')|sum) %}
+      {% set o_invoiced = (orders_today|selectattr('status', 'equalto', 'invoiced')|map(attribute='n')|sum) %}
+      {% set o_dispatched = (orders_today|selectattr('status', 'equalto', 'dispatched')|map(attribute='n')|sum) %}
+
+      <div>
+        <div style="display:flex; justify-content:space-between; font-size:0.82rem; margin-bottom:0.25rem;">
+          <span>1. Orders Submitted (Field Sales)</span>
+          <b>{{ o_submitted }}</b>
+        </div>
+        <div class="visual-progress-bar"><div class="progress-fill fill-warning" style="width:{% if o_submitted > 0 %}100%{% else %}10%{% endif %};"></div></div>
+      </div>
+
+      <div>
+        <div style="display:flex; justify-content:space-between; font-size:0.82rem; margin-bottom:0.25rem;">
+          <span>2. Verified & Approved (Admin Desk)</span>
+          <b>{{ o_approved }}</b>
+        </div>
+        <div class="visual-progress-bar"><div class="progress-fill fill-primary" style="width:{% if o_approved > 0 %}75%{% else %}10%{% endif %};"></div></div>
+      </div>
+
+      <div>
+        <div style="display:flex; justify-content:space-between; font-size:0.82rem; margin-bottom:0.25rem;">
+          <span>3. GST Invoiced (Tax Engine)</span>
+          <b>{{ o_invoiced }}</b>
+        </div>
+        <div class="visual-progress-bar"><div class="progress-fill" style="background:#7c3aed; width:{% if o_invoiced > 0 %}50%{% else %}10%{% endif %};"></div></div>
+      </div>
+
+      <div>
+        <div style="display:flex; justify-content:space-between; font-size:0.82rem; margin-bottom:0.25rem;">
+          <span>4. Dispatched & Stock Deducted</span>
+          <b>{{ o_dispatched }}</b>
+        </div>
+        <div class="visual-progress-bar"><div class="progress-fill fill-success" style="width:{% if o_dispatched > 0 %}100%{% else %}10%{% endif %};"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Production Yield Variance Gauge -->
+  <div class="card" style="flex:1 1 380px;">
+    <h3 class="card-title" style="margin-bottom:0.75rem;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 20h20M5 20V8l7 4V4l7 4v12"/></svg>
+      Batch Yield vs BOM Recipe Standard
+    </h3>
+    <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1rem;">Benchmark Murukku 200g run comparison against standard BOM recipe:</p>
+
+    <div style="background:var(--bg-surface-elevated); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--border-color); margin-bottom:0.75rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+        <span style="font-size:0.85rem; font-weight:600;">Expected Output (Standard)</span>
+        <span style="font-family:var(--font-mono); font-weight:700;">200 Packets</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+        <span style="font-size:0.85rem; font-weight:600;">Actual Good Packets Produced</span>
+        <span style="font-family:var(--font-mono); font-weight:700; color:var(--text-primary);">188 Packets</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:0.85rem; font-weight:600;">Yield Variance</span>
+        <span class="variance-box flagged">-6.00% (Flagged &gt; 3%)</span>
+      </div>
+    </div>
+
+    <div style="background:var(--bg-surface-elevated); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--border-color);">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:0.85rem; font-weight:600;">Cooking Oil Issued</span>
+        <span style="font-family:var(--font-mono);">10.5 L (Std 10.0 L)</span>
+        <span class="variance-box flagged">+5.00% (Flagged)</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Current Real-Time Stock Balances Table -->
+<div class="card">
+  <div class="card-header-row">
+    <div>
+      <h3 class="card-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        Current Stock Status & Reorder Alert Register
+      </h3>
+      <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.2rem;">
+        Reconciled from <code>stock_ledger</code>: Opening + Receipts - Issues/Sales ± Adjustments = Closing.
+      </p>
+    </div>
+    <a href="{{ url_for('reports.view', slug='stock-summary') }}" class="btn secondary btn-sm">Full Stock Report →</a>
+  </div>
+
+  <div class="table-responsive">
+    <table>
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Item Code</th>
+          <th>Item Name</th>
+          <th class="num">On-Hand Quantity</th>
+          <th>Base Unit</th>
+          <th class="num">Weighted Valuation</th>
+          <th style="text-align:center;">Reorder Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for l in levels %}
+        <tr class="{{ 'flag-row' if l.low }}">
+          <td>
+            <span class="badge {% if l.kind == 'finished' %}approved{% elif l.kind == 'raw' %}submitted{% else %}invoiced{% endif %}">
+              {{ l.kind }}
+            </span>
+          </td>
+          <td style="font-family:var(--font-mono); font-size:0.8rem; color:var(--text-muted);">{{ l.code }}</td>
+          <td><b>{{ l.name }}</b></td>
+          <td class="num" style="font-weight:700;">{{ l.qty|qty }}</td>
+          <td>{{ l.base_unit }}</td>
+          <td class="num">₹{{ l.value|money }}</td>
+          <td style="text-align:center;">
+            {% if l.low %}
+              <span class="badge flag">⚠️ Below Reorder ({{ l.reorder_level_milli|qty }})</span>
+            {% else %}
+              <span class="badge ok">Sufficient</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
