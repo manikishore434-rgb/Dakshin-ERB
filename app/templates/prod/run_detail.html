@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+{% set r = s.run %}
+{% block title %}{{ r.run_no }} · Production Run · DakshinERP{% endblock %}
+{% block page_title %}Production Run: {{ r.run_no }}{% endblock %}
+{% block body %}
+<!-- Header Run Card -->
+<div class="card" style="border-top:3px solid var(--primary);">
+  <div class="card-header-row" style="margin-bottom:0.75rem;">
+    <div>
+      <div style="display:flex; align-items:center; gap:0.75rem;">
+        <h2 style="font-size:1.4rem; font-weight:800;">{{ r.product_name }}</h2>
+        <span class="badge {{ r.status }}" style="font-size:0.82rem; padding:0.25rem 0.75rem;">{{ r.status|upper }}</span>
+      </div>
+      <p style="font-size:0.88rem; color:var(--text-secondary); margin-top:0.35rem;">
+        Run #: <b>{{ r.run_no }}</b> · Date: {{ r.date }} · Batch: <code>{{ r.batch_no }}</code>
+        {% if r.expiry %} · Expiry: {{ r.expiry }}{% endif %} · Batch Count: <b>{{ r.batches_milli|qty }}</b>
+      </p>
+    </div>
+    <a href="{{ url_for('production.runs') }}" class="btn secondary btn-sm">← Back to Runs</a>
+  </div>
+
+  <div style="display:flex; flex-wrap:wrap; gap:1.5rem; background:var(--bg-surface-elevated); padding:1rem; border-radius:var(--radius-sm); font-size:0.88rem; align-items:center;">
+    <div>Expected Standard Yield: <b>{{ r.expected_milli|qty }} Packets</b></div>
+    {% if s.done %}
+    <div>Actual Good Output: <b style="color:var(--primary); font-size:1.05rem;">{{ r.actual_milli|qty }} Packets</b></div>
+    <div>Wastage / Damaged: <b style="color:#dc2626;">{{ r.damaged_milli|qty }} Pouches</b></div>
+    <div>
+      Yield Variance:
+      {% if s.yield_flag %}
+        <span class="variance-box flagged">{{ s.yield_var_pct }}% (Flagged &gt; ±{{ s.tolerance_bp/100 }}%)</span>
+      {% else %}
+        <span class="variance-box normal">{{ s.yield_var_pct }}% (Within tolerance)</span>
+      {% endif %}
+    </div>
+    {% else %}
+    <div style="color:var(--status-warning-text); font-weight:600;">Status: Run In Progress on Floor</div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Planned vs Actual Recipe Ingredients Consumption -->
+<div class="card">
+  <div class="card-header-row">
+    <div>
+      <h3 class="card-title">BOM Recipe Consumption (Planned vs Actual)</h3>
+      <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.2rem;">
+        Raw materials and packaging items issued. Any discrepancy beyond ±{{ s.tolerance_bp/100 }}% is flagged.
+      </p>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table>
+      <thead>
+        <tr>
+          <th>Material / Packaging Item</th>
+          <th>Base Unit</th>
+          <th class="num">Standard Planned Qty</th>
+          <th class="num">Actual Issued / Consumed</th>
+          <th class="num">Variance (%)</th>
+          <th class="num">Weighted Valuation (₹)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for l in s.lines %}
+        <tr class="{{ 'flag-row' if l.flag }}">
+          <td><b>{{ l.name }}</b></td>
+          <td>{{ l.base_unit }}</td>
+          <td class="num">{{ l.planned_milli|qty }}</td>
+          <td class="num" style="font-weight:700;">{{ l.actual_milli|qty }}</td>
+          <td class="num">
+            {% if l.var_pct is not none %}
+              {% if l.flag %}
+                <span class="variance-box flagged">{{ l.var_pct }}% FLAGGED</span>
+              {% else %}
+                <span class="variance-box normal">{{ l.var_pct }}%</span>
+              {% endif %}
+            {% else %}
+              -
+            {% endif %}
+          </td>
+          <td class="num">₹{{ l.actual_value_paise|money }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Unit Cost Economics Card (if completed) -->
+{% if s.done %}
+<div class="card" style="border-left:4px solid #059669;">
+  <div class="card-header-row">
+    <div>
+      <h3 class="card-title" style="color:#059669;">
+        Production Costing & Margin per Packet (Weighted Average)
+      </h3>
+      <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.2rem;">
+        Direct materials, packaging, labour and energy overheads absorbed across good output packets.
+      </p>
+    </div>
+    <div style="text-align:right;">
+      <span style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Unit Cost</span>
+      <div style="font-size:1.6rem; font-weight:800; color:var(--primary); font-family:var(--font-mono);">
+        ₹{{ s.cost_per_packet_paise|money }}
+      </div>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table>
+      <tbody>
+        <tr><td>Raw Material & Packaging Consumed (Weighted Average)</td><td class="num" style="font-weight:600;">₹{{ s.material_paise|money }}</td></tr>
+        <tr><td>Direct Labour & Overheads Allocated to this Run</td><td class="num">₹{{ s.direct_overhead_paise|money }}</td></tr>
+        <tr><td>Share of Monthly Common Overheads Pool (By Good Packets)</td><td class="num">₹{{ s.allocated_overhead_paise|money }}</td></tr>
+        <tr class="total">
+          <td>Total Production Run Expenditure</td>
+          <td class="num" style="font-size:1.05rem;">₹{{ s.total_cost_paise|money }}</td>
+        </tr>
+        <tr style="background:var(--bg-surface-elevated);">
+          <td><b>Cost per Packet (Total Cost ÷ {{ r.actual_milli|qty }} Good Packets Produced)</b></td>
+          <td class="num" style="font-size:1.2rem; font-weight:800; color:var(--primary);">₹{{ s.cost_per_packet_paise|money }}</td>
+        </tr>
+        <tr style="color:#059669; font-weight:700;">
+          <td>Selling Price (Pre-Tax): ₹{{ r.price_paise|money }} · Unit Margin: ₹{{ s.margin_per_packet_paise|money }}</td>
+          <td class="num" style="font-size:1.1rem; color:#059669;">{{ s.margin_pct }}% Gross Margin</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- Actions & Recording Grid -->
+<div class="row">
+  {% if r.status == 'open' %}
+  <!-- Record Output Card -->
+  <div class="card" style="flex:1 1 420px; border-top:3px solid #059669;">
+    <h3 style="font-size:1.1rem; font-weight:700; margin-bottom:0.35rem; color:#059669;">Record Actual Output & Packaging Used</h3>
+    <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:1rem;">
+      Closes run, computes yield variance, deducts packaging from ledger, and increments finished goods.
+    </p>
+
+    <form method="post" action="{{ url_for('production.run_action', rid=r.id, action='complete') }}">
+      <div class="row">
+        <div class="form-group">
+          <label for="good_pkts">Good Finished Packets Produced *</label>
+          <input id="good_pkts" name="good" type="number" step="any" min="0" placeholder="e.g. 188" required>
+        </div>
+        <div class="form-group">
+          <label for="dam_pkts">Damaged Pouches / Wastage</label>
+          <input id="dam_pkts" name="damaged" type="number" step="any" min="0" value="0">
+        </div>
+      </div>
+
+      <p style="font-size:0.78rem; color:var(--text-secondary); margin:0.5rem 0;">
+        Leave packaging blank to use formula: Pouches = Good + Damaged; Cartons = Good ÷ Pack Size (rounded up).
+      </p>
+
+      {% for l in pack_lines %}
+      <div class="form-group">
+        <label>{{ l.name }} Used ({{ l.base_unit }}) · Planned: {{ l.planned_milli|qty }}</label>
+        <input name="pack_{{ l.item_id }}" type="number" step="any" min="0" placeholder="e.g. 9 for cartons, or blank">
+      </div>
+      {% endfor %}
+
+      <div class="form-group">
+        <label for="out_date">Completion Date *</label>
+        <input id="out_date" type="date" name="date" value="{{ today() }}" required>
+      </div>
+
+      <button type="submit" class="btn success" style="width:100%; padding:0.75rem;">
+        ✓ Save Output & Update Stock Ledger
+      </button>
+    </form>
+  </div>
+
+  <!-- Issue More Raw Materials Card -->
+  <div class="card" style="flex:1 1 340px;">
+    <h3 style="font-size:1.1rem; font-weight:700; margin-bottom:0.35rem;">Issue Additional Raw Material</h3>
+    <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:1rem;">Record extra material issued from store room to floor.</p>
+
+    <form method="post" action="{{ url_for('production.run_action', rid=r.id, action='issue') }}">
+      {% for l in raw_lines %}
+      <div class="row" style="margin-bottom:0.5rem;">
+        <div class="form-group" style="flex:2;">
+          <label>{{ l.name }}</label>
+          <input name="issue_{{ l.item_id }}" type="number" step="any" min="0" placeholder="Extra qty">
+        </div>
+        <div class="form-group" style="flex:1;">
+          <label>Unit</label>
+          <select name="unit_{{ l.item_id }}">
+            {% if l.base_unit == 'kg' %}<option>kg</option><option>g</option>
+            {% elif l.base_unit == 'l' %}<option>l</option><option>ml</option>
+            {% else %}<option>{{ l.base_unit }}</option>{% endif %}
+          </select>
+        </div>
+      </div>
+      {% endfor %}
+      <button type="submit" class="btn secondary" style="width:100%;">Post Additional Issue</button>
+    </form>
+  </div>
+  {% endif %}
+
+  {% if r.status != 'cancelled' %}
+  <!-- Overheads & Cancellation -->
+  <div class="card" style="flex:1 1 360px;">
+    <h3 style="font-size:1.1rem; font-weight:700; margin-bottom:0.35rem;">Add Direct Overheads (Labour, Gas, Power)</h3>
+    <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:1rem;">Charge operating costs to this run for true unit costing.</p>
+
+    <form method="post" action="{{ url_for('production.run_action', rid=r.id, action='overhead') }}">
+      <div class="row">
+        <div class="form-group">
+          <label>Overhead Type</label>
+          <select name="kind">
+            <option value="labour">Labour</option>
+            <option value="power_gas">Power / Gas</option>
+            <option value="other">Other Overhead</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Amount (₹) *</label>
+          <input name="amount" type="number" step="0.01" min="0.01" placeholder="e.g. 1200.00" required>
+        </div>
+      </div>
+      <div class="form-group"><label>Note</label><input name="note" placeholder="e.g. Shift 1 frying labour"></div>
+      <div class="form-group"><label>Date</label><input type="date" name="date" value="{{ today() }}"></div>
+      <button type="submit" class="btn secondary" style="width:100%; margin-bottom:1rem;">+ Add Overhead</button>
+    </form>
+
+    {% for o in overheads %}
+    <div style="font-size:0.82rem; padding:0.4rem 0.6rem; background:var(--bg-surface-elevated); border-radius:var(--radius-sm); margin-bottom:0.4rem; display:flex; justify-content:space-between;">
+      <span>{{ o.date }} · <b>{{ o.kind|capitalize }}</b></span>
+      <span style="font-family:var(--font-mono); font-weight:700;">₹{{ o.amount_paise|money }}</span>
+    </div>
+    {% endfor %}
+
+    <div style="margin-top:1.5rem; padding-top:1rem; border-top:1px solid var(--border-color);">
+      <h4 style="font-size:0.9rem; font-weight:700; color:#dc2626; margin-bottom:0.4rem;">Cancel Run</h4>
+      <form method="post" action="{{ url_for('production.run_action', rid=r.id, action='cancel') }}">
+        <div class="form-group"><label>Cancellation Reason</label><input name="reason" placeholder="e.g. Machine breakdown, contaminated batch" required></div>
+        <button type="submit" class="btn danger btn-sm" style="width:100%;">Cancel Run & Revert Stock</button>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Stock Ledger Movements for Traceability -->
+<div class="card">
+  <div class="card-header-row">
+    <div>
+      <h3 class="card-title">Auditable Stock Movements Caused by this Run</h3>
+      <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.2rem;">
+        Direct ledger debit/credit transactions linking to this run id.
+      </p>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table>
+      <thead>
+        <tr>
+          <th>Item Description</th>
+          <th>Movement Type</th>
+          <th class="num">Quantity Moved</th>
+          <th class="num">Valuation (₹)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for l in ledger %}
+        <tr>
+          <td><b>{{ l.name }}</b></td>
+          <td><span class="badge info">{{ l.move_type }}</span></td>
+          <td class="num" style="font-weight:700;">{{ l.qty_milli|qty }}</td>
+          <td class="num">₹{{ l.value_paise|money }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

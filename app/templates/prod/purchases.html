@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% block title %}Material Receipts & Purchases · DakshinERP{% endblock %}
+{% block page_title %}Raw Material Receipts & Inventory Adjustments{% endblock %}
+{% block body %}
+
+<!-- Record Purchase / Receipt Form -->
+<form class="card" method="post" style="border-top:3px solid var(--primary);">
+  <div class="card-header-row">
+    <div>
+      <h2 style="font-size:1.25rem; font-weight:700;">Record Raw Material / Packaging Receipt</h2>
+      <p style="font-size:0.82rem; color:var(--text-muted);">
+        Receipts update stock ledger immediately and establish perpetual weighted-average unit valuation.
+      </p>
+    </div>
+  </div>
+
+  <div class="row" style="margin-bottom:1rem;">
+    <div class="form-group" style="flex:2;">
+      <label>Supplier *</label>
+      <select name="supplier_id" required>
+        <option value="">-- Select Supplier --</option>
+        {% for s in suppliers %}
+        <option value="{{ s.id }}">{{ s.name }} (GSTIN: {{ s.gstin or 'Unregistered' }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Supplier Invoice / DC #</label>
+      <input name="supplier_invoice_no" placeholder="e.g. FL-001">
+    </div>
+    <div class="form-group">
+      <label>Receipt Date *</label>
+      <input type="date" name="date" value="{{ today() }}" required>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table>
+      <thead>
+        <tr>
+          <th>Material / Packaging Item</th>
+          <th style="width:120px;">Quantity</th>
+          <th style="width:110px;">Unit</th>
+          <th style="width:160px;">Rate (₹ per Base Unit)</th>
+          <th style="width:140px;">Batch #</th>
+          <th style="width:140px;">Expiry Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for n in range(1, 6) %}
+        <tr>
+          <td>
+            <select name="item_{{ n }}">
+              <option value="">-- None --</option>
+              {% for i in inputs %}
+              <option value="{{ i.id }}">{{ i.name }} ({{ i.base_unit }})</option>
+              {% endfor %}
+            </select>
+          </td>
+          <td><input name="qty_{{ n }}" type="number" step="any" min="0" placeholder="Qty"></td>
+          <td>
+            <select name="unit_{{ n }}">
+              <option value="">Base Unit</option>
+              <option>kg</option>
+              <option>g</option>
+              <option>l</option>
+              <option>ml</option>
+              <option>piece</option>
+            </select>
+          </td>
+          <td><input name="rate_{{ n }}" type="number" step="0.0001" min="0" placeholder="₹ Rate"></td>
+          <td><input name="batch_{{ n }}" placeholder="Batch #"></td>
+          <td><input type="date" name="expiry_{{ n }}"></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p style="font-size:0.8rem; color:var(--text-muted); margin:0.75rem 0;">
+    ℹ️ Rate must be specified in rupees per base unit (e.g. ₹45/kg for flour). Unit conversions (e.g. grams to kilograms) are handled automatically without rounding errors.
+  </p>
+  <button type="submit" class="btn success" style="padding:0.75rem 1.5rem;">
+    ✓ Save Material Receipt to Stock Ledger
+  </button>
+</form>
+
+<!-- Recent Receipts & Stock Adjustments -->
+<div class="row">
+  <!-- Recent Receipts Table -->
+  <div class="card" style="flex:1 1 450px;">
+    <h3 style="font-size:1.15rem; font-weight:700; margin-bottom:0.75rem;">Recent Inward Receipts</h3>
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Receipt #</th>
+            <th>Date</th>
+            <th>Supplier Name</th>
+            <th>Invoice #</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in recent %}
+          <tr>
+            <td style="font-family:var(--font-mono); font-weight:700; color:var(--primary);">{{ p.purchase_no }}</td>
+            <td style="font-size:0.85rem; color:var(--text-secondary);">{{ p.date }}</td>
+            <td><b>{{ p.supplier or 'Direct Purchase' }}</b></td>
+            <td style="font-family:var(--font-mono); font-size:0.85rem;">{{ p.supplier_invoice_no or '-' }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" style="text-align:center; padding:1.5rem; color:var(--text-muted);">No receipts recorded yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Physical Stock Adjustment Form -->
+  <div class="card" style="flex:1 1 380px;">
+    <h3 style="font-size:1.15rem; font-weight:700; margin-bottom:0.35rem;">Physical Count Adjustment</h3>
+    <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:1rem;">
+      Adjust balances for stock verification, spoilage, or shrinkage with mandatory audit reason.
+    </p>
+
+    <form method="post" action="{{ url_for('production.adjust') }}">
+      <div class="form-group">
+        <label>Item *</label>
+        <select name="item_id" required>
+          {% for i in items_all %}
+          <option value="{{ i.id }}">{{ i.name }} ({{ i.kind }})</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="row">
+        <div class="form-group">
+          <label>Direction *</label>
+          <select name="direction">
+            <option value="decrease">Decrease (Shrinkage / Damage)</option>
+            <option value="increase">Increase (Found Stock)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Quantity *</label>
+          <input name="qty" type="number" step="any" min="0" placeholder="Qty" required>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="form-group">
+          <label>Unit</label>
+          <select name="unit">
+            <option value="">Base Unit</option>
+            <option>kg</option><option>g</option><option>l</option><option>ml</option><option>piece</option><option>packet</option><option>carton</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex:2;">
+          <label>Audit Reason *</label>
+          <input name="reason" placeholder="e.g. Monthly physical audit count" required>
+        </div>
+      </div>
+
+      <button type="submit" class="btn secondary" style="width:100%; margin-top:0.5rem;">
+        Post Stock Adjustment
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

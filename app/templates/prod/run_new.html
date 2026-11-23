@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block title %}Start Production Run · DakshinERP{% endblock %}
+{% block page_title %}Start Production Run{% endblock %}
+{% block body %}
+<!-- Product & Batch Selector Form -->
+<form class="card" method="get" style="border-top:3px solid var(--primary); margin-bottom:1.5rem;">
+  <h2 style="font-size:1.25rem; font-weight:700; margin-bottom:0.25rem;">Select Product & Batch Scale</h2>
+  <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:1rem;">
+    Calculates expected output and standard BOM ingredient requirements automatically.
+  </p>
+
+  <div class="row">
+    <div class="form-group" style="flex:2;">
+      <label for="p_sel">Target Finished Product *</label>
+      <select id="p_sel" name="product_id" onchange="this.form.submit()">
+        {% for p in products %}
+        <option value="{{ p.id }}" {{ 'selected' if p.id == pid }}>{{ p.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group" style="flex:1;">
+      <label for="b_cnt">Number of Batches *</label>
+      <input id="b_cnt" name="batches" type="number" step="any" min="0.01" value="{{ batches }}" onchange="this.form.submit()">
+    </div>
+  </div>
+</form>
+
+<!-- Issue Raw Materials Form -->
+<form class="card" method="post">
+  <input type="hidden" name="product_id" value="{{ pid }}">
+  <input type="hidden" name="batches" value="{{ batches }}">
+
+  <div class="card-header-row">
+    <div>
+      <h3 class="card-title">
+        Issue Raw Materials from Inventory (Expected Output: {{ expected|qty }} Packets)
+      </h3>
+      <p style="font-size:0.82rem; color:var(--text-muted); margin-top:0.2rem;">
+        Standard BOM quantities are pre-filled below. Adjust to actual issued quantities (e.g. 10.5 L oil for the benchmark run). Packaging is consumed when output is recorded.
+      </p>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table>
+      <thead>
+        <tr>
+          <th>Raw Material Ingredient</th>
+          <th class="num">Standard BOM Requirement</th>
+          <th>Actual Issued Quantity *</th>
+          <th>Unit of Measure</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for l in plan %}
+        <tr>
+          <td><b>{{ l.name }}</b></td>
+          <td class="num">{{ l.planned|qty }} {{ l.base_unit }}</td>
+          <td>
+            <input name="issue_{{ l.item_id }}" type="number" step="any" min="0" value="{{ l.planned|qty }}" style="max-width:140px; font-weight:700;" required>
+          </td>
+          <td>
+            <select name="unit_{{ l.item_id }}" style="max-width:100px;">
+              {% for u in l.units %}
+              <option {{ 'selected' if u == l.base_unit }}>{{ u }}</option>
+              {% endfor %}
+            </select>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="row" style="margin-top:1rem; margin-bottom:1.5rem;">
+    <div class="form-group">
+      <label for="run_date">Run Date *</label>
+      <input id="run_date" type="date" name="date" value="{{ today() }}" required>
+    </div>
+    <div class="form-group" style="flex:2;">
+      <label for="run_notes">Batch Notes / Supervisor Observations</label>
+      <input id="run_notes" name="notes" placeholder="e.g. Benchmark test run, oil adjusted +0.5L">
+    </div>
+  </div>
+
+  <button type="submit" class="btn success" style="width:100%; padding:0.8rem; font-size:1rem; font-weight:700;">
+    ✓ Start Production Run & Deduct Raw Materials from Ledger
+  </button>
+</form>
+{% endblock %}
