@@ -62,6 +62,25 @@ def _share(inv):
             "mail": "mailto:?subject=" + quote("Invoice " + inv["invoice_no"]) + "&body=" + quote(text)}
 
 
+@bp.route("/admin/orders/<int:oid>/plan-production", methods=["POST"])
+@login_required(*ADMIN)
+def order_plan_production(oid):
+    from ..services import intelligence as intel
+    db = get_db()
+    checks = sales.stock_check(db, oid)
+    created_plans = 0
+    with tx(db):
+        for chk in checks:
+            if chk["shortage"] > 0 and chk["batches_needed"] > 0:
+                intel.save_production_plan(db, g.user, chk["item_id"], chk["batches_needed"], f"Auto-planned for Order #{oid}", order_id=oid)
+                created_plans += 1
+    if created_plans > 0:
+        flash(f"{created_plans} production plan(s) generated to cover order shortages", "ok")
+        return redirect(url_for("intelligence.production_planner"))
+    flash("No production shortages detected for this order", "info")
+    return redirect(url_for("admin.order_detail", oid=oid))
+
+
 @bp.route("/admin/orders/<int:oid>/edit", methods=["POST"])
 @login_required(*ADMIN)
 def order_edit(oid):

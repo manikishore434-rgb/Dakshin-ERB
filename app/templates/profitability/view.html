@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% block title %}Profitability Intelligence - SNACKFLOW ERP{% endblock %}
+
+{% block body %}
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Profitability & Unit Margin Intelligence</h1>
+    <div class="page-subtitle">Real manufacturing unit economics derived from actual BOM issues, utility costs, and sales revenue.</div>
+  </div>
+  <div class="page-actions">
+    <a href="{{ url_for('reports.view', slug='profitability') }}?fmt=xlsx" class="btn btn-secondary">Export Excel</a>
+    <a href="{{ url_for('reports.view', slug='profitability') }}?fmt=pdf" class="btn btn-secondary">Print PDF</a>
+  </div>
+</div>
+
+<!-- Profitability KPIs -->
+<div class="grid-cards-4">
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <span class="kpi-label">Net Sales Revenue</span>
+      <div class="kpi-icon-box kpi-icon-blue">₹</div>
+    </div>
+    <div class="kpi-val">Rs {{ total_revenue_paise | money }}</div>
+    <div class="kpi-sub">Posted sales minus credit notes</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <span class="kpi-label">Cost of Goods Sold</span>
+      <div class="kpi-icon-box kpi-icon-amber">🏭</div>
+    </div>
+    <div class="kpi-val">Rs {{ total_cogs_paise | money }}</div>
+    <div class="kpi-sub">Direct material & allocated overhead</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <span class="kpi-label">Gross Margin</span>
+      <div class="kpi-icon-box kpi-icon-green">📈</div>
+    </div>
+    <div class="kpi-val" style="color:var(--color-success);">Rs {{ total_gross_profit_paise | money }}</div>
+    <div class="kpi-sub">Overall profit contribution</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <span class="kpi-label">Average Margin %</span>
+      <div class="kpi-icon-box kpi-icon-purple">%</div>
+    </div>
+    <div class="kpi-val" style="color:var(--color-purple);">{{ avg_margin_pct }}%</div>
+    <div class="kpi-sub">Gross margin percentage</div>
+  </div>
+</div>
+
+<!-- Section 1: Product Unit Economics -->
+<div class="table-container">
+  <div class="table-toolbar">
+    <div style="font-weight:700; font-size:0.95rem; color:var(--text-main);">
+      Product Unit Economics & Production Cost Breakdown
+    </div>
+  </div>
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th class="num">Selling Price</th>
+          <th class="num">Unit Cost (COGS)</th>
+          <th class="num">Unit Margin</th>
+          <th class="num">Margin %</th>
+          <th class="num">Raw Materials</th>
+          <th class="num">Labour Cost</th>
+          <th class="num">Energy & Gas</th>
+          <th class="num">Total Invoiced Rev</th>
+          <th class="num">Gross Profit</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in products %}
+        <tr>
+          <td style="font-weight:700;">{{ p.product.name }} ({{ p.product.code }})</td>
+          <td class="num">Rs {{ p.unit_price_paise | money }}</td>
+          <td class="num" style="font-weight:600;">Rs {{ p.unit_cost_paise | money }}</td>
+          <td class="num" style="font-weight:700; color:{% if p.unit_margin_paise > 0 %}var(--color-success){% else %}var(--color-danger){% endif %};">
+            Rs {{ p.unit_margin_paise | money }}
+          </td>
+          <td class="num">
+            <span class="badge {% if p.gross_margin_pct >= 30 %}badge-success{% elif p.gross_margin_pct > 15 %}badge-warning{% else %}badge-danger{% endif %}">
+              {{ p.gross_margin_pct }}%
+            </span>
+          </td>
+          <td class="num">Rs {{ p.total_material_paise | money }}</td>
+          <td class="num">Rs {{ p.total_labour_paise | money }}</td>
+          <td class="num">Rs {{ p.total_energy_paise | money }}</td>
+          <td class="num">Rs {{ p.net_revenue_paise | money }}</td>
+          <td class="num" style="font-weight:700; color:var(--color-success);">Rs {{ p.gross_profit_paise | money }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Section 2: Customer Profitability Contribution -->
+<div class="table-container">
+  <div class="table-toolbar">
+    <div style="font-weight:700; font-size:0.95rem; color:var(--text-main);">
+      Customer Contribution & Profitability Ranking
+    </div>
+  </div>
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Customer Name</th>
+          <th>Type</th>
+          <th>State</th>
+          <th class="num">Total Revenue</th>
+          <th class="num">Total COGS</th>
+          <th class="num">Gross Contribution</th>
+          <th class="num">Margin %</th>
+          <th class="num">Outstanding Balance</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in customers %}
+        <tr>
+          <td style="font-weight:700;">{{ c.customer.name }}</td>
+          <td><span class="badge badge-subtle">{{ c.customer.type }}</span></td>
+          <td>{{ c.customer.state_name }}</td>
+          <td class="num">Rs {{ c.revenue_paise | money }}</td>
+          <td class="num">Rs {{ c.cogs_paise | money }}</td>
+          <td class="num" style="font-weight:700; color:var(--color-success);">Rs {{ c.gross_profit_paise | money }}</td>
+          <td class="num">
+            <span class="badge {% if c.margin_pct >= 30 %}badge-success{% elif c.margin_pct > 15 %}badge-warning{% else %}badge-danger{% endif %}">
+              {{ c.margin_pct }}%
+            </span>
+          </td>
+          <td class="num" style="font-weight:600; color:{% if c.outstanding_paise > 0 %}var(--color-danger){% else %}var(--text-muted){% endif %};">
+            Rs {{ c.outstanding_paise | money }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

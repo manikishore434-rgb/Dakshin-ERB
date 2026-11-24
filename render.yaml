@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: snackflow-erp
+    env: python
+    buildCommand: pip install -r requirements.txt gunicorn
+    startCommand: gunicorn -b 0.0.0.0:$PORT -w 1 --threads 4 run:app
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE
+        value: data/oto.db
+      - key: PORT
+        value: 5000
+    disk:
+      name: erp-data
+      mountPath: /srv/data
+      sizeGB: 1

@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}Supplier Intelligence · SnackFlow ERP{% endblock %}
+{% block page_title %}{{ tr("Supplier Intelligence") }}{% endblock %}
+{% block body %}
+<div class="supplier-intelligence-container">
+
+  <div class="card" style="margin-bottom: 1.5rem; border-left: 4px solid var(--primary);">
+    <h2 style="font-size: 1.4rem; font-weight: 800; margin: 0;">Vendor Performance Scorecards</h2>
+    <p style="color: var(--text-secondary); font-size: 0.88rem; margin: 0.25rem 0 0;">
+      Supplier evaluation based on fulfillment punctuality, lead-time adherence, GST statutory compliance, and quality acceptance rates.
+    </p>
+  </div>
+
+  <div class="card">
+    {% if cards %}
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Supplier Name</th>
+            <th>GSTIN</th>
+            <th>Contact</th>
+            <th>Lead Time</th>
+            <th>Total Inwards</th>
+            <th>Cumulative Spend</th>
+            <th>Performance Score</th>
+            <th>Risk Indicator</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in cards %}
+          <tr>
+            <td style="font-weight: 700;">{{ c.name }}</td>
+            <td><code>{{ c.gstin }}</code></td>
+            <td>{{ c.phone }}</td>
+            <td>{{ c.lead_time_days }} days</td>
+            <td>{{ c.total_orders }} purchase(s)</td>
+            <td style="font-weight: 700;">₹{{ c.total_spend_paise | money }}</td>
+            <td>
+              <div style="display:flex; align-items:center; gap:0.4rem;">
+                <strong style="color: {% if c.score >= 85 %}#10b981{% else %}#f59e0b{% endif %}; font-size:1.05rem;">
+                  {{ c.score }}/100
+                </strong>
+              </div>
+            </td>
+            <td>
+              <span class="badge {% if c.risk == 'Low Risk' %}approved{% else %}submitted{% endif %}">
+                {{ c.risk }}
+              </span>
+            </td>
+            <td>
+              <a href="{{ url_for('production.purchases') }}?supplier_id={{ c.id }}" class="btn secondary btn-sm" style="font-size:0.75rem; padding:0.25rem 0.5rem;">
+                New PO / Inward
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p style="color: var(--text-muted); font-size: 0.88rem;">No registered suppliers found.</p>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

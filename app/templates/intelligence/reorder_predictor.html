@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}Smart Reorder Predictor · SnackFlow ERP{% endblock %}
+{% block page_title %}{{ tr("Reorder Predictor") }}{% endblock %}
+{% block body %}
+<div class="reorder-predictor-container">
+
+  <div class="card" style="margin-bottom: 1.5rem; border-left: 4px solid var(--primary);">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h2 style="font-size: 1.4rem; font-weight: 800; margin: 0;">Predictive Material Replenishment Engine</h2>
+        <p style="color: var(--text-secondary); font-size: 0.88rem; margin: 0.25rem 0 0;">
+          Calculates stock runway based on moving average consumption, safety stock buffer, and supplier lead time.
+        </p>
+      </div>
+      <div>
+        <a href="{{ url_for('production.purchases') }}" class="btn secondary btn-sm">Material Inward Hub →</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Kind</th>
+            <th>On Hand</th>
+            <th>Daily Burn Rate</th>
+            <th>Stock Runway</th>
+            <th>Suggested Reorder</th>
+            <th>Preferred Supplier</th>
+            <th>Estimated Cost</th>
+            <th>Urgency</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in reorders %}
+          <tr style="{% if r.urgency == 'Critical' %}background: rgba(239, 68, 68, 0.05);{% endif %}">
+            <td style="font-weight: 700;">
+              {{ r.name }}<br>
+              <code style="font-size: 0.72rem;">{{ r.code }}</code>
+            </td>
+            <td><span class="badge {{ r.kind }}">{{ r.kind | upper }}</span></td>
+            <td>{{ r.current_stock | qty }} {{ r.base_unit }}</td>
+            <td>{{ r.daily_consumption | qty }} {{ r.base_unit }}/day</td>
+            <td>
+              <strong style="color: {% if r.runway_days <= 3 %}#ef4444{% elif r.runway_days <= 7 %}#f59e0b{% else %}#10b981{% endif %};">
+                {{ r.runway_days }} day(s)
+              </strong>
+            </td>
+            <td style="font-weight: 700;">
+              {{ r.suggested_qty | qty }} {{ r.base_unit }}
+            </td>
+            <td>
+              <div style="font-size: 0.82rem; font-weight: 600;">{{ r.supplier_name }}</div>
+              <div style="font-size: 0.72rem; color: var(--text-muted);">Last Rate: ₹{{ r.last_rate }}/{{ r.base_unit }}</div>
+            </td>
+            <td><strong>₹{{ r.est_cost_paise | money }}</strong></td>
+            <td>
+              <span class="badge {% if r.urgency == 'Critical' %}rejected{% elif r.urgency == 'High' %}submitted{% elif r.urgency == 'Medium' %}invoiced{% else %}approved{% endif %}">
+                {{ r.urgency | upper }}
+              </span>
+            </td>
+            <td>
+              <a href="{{ url_for('production.purchases') }}?item_id={{ r.item_id }}&qty={{ r.suggested_qty | qty }}&rate={{ r.last_rate }}&supplier_id={{ r.supplier_id or '' }}"
+                 class="btn btn-sm" style="font-size: 0.75rem; padding: 0.35rem 0.65rem;">
+                Inward Stock 📥
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

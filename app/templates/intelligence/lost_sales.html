@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% block title %}Lost Sales Intelligence · SnackFlow ERP{% endblock %}
+{% block page_title %}{{ tr("Lost Sales") }}{% endblock %}
+{% block body %}
+<div class="lost-sales-container">
+
+  <!-- Summary Cards -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+    <div class="card" style="border-left: 4px solid #ef4444;">
+      <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Unfulfilled Lost Revenue</span>
+      <div style="font-size: 1.8rem; font-weight: 800; color: #ef4444; margin: 0.2rem 0;">
+        ₹{{ summary.total_lost_revenue_paise | money }}
+      </div>
+      <span style="font-size: 0.8rem; color: var(--text-secondary);">Demand uncaptured due to constraints</span>
+    </div>
+
+    <div class="card" style="border-left: 4px solid #f59e0b;">
+      <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Lost Quantity</span>
+      <div style="font-size: 1.8rem; font-weight: 800; color: #f59e0b; margin: 0.2rem 0;">
+        {{ summary.total_lost_qty_milli | qty }} <span style="font-size:0.95rem; font-weight:500; color:var(--text-muted);">packets</span>
+      </div>
+      <span style="font-size: 0.8rem; color: var(--text-secondary);">Unmet retail & distributor requests</span>
+    </div>
+
+    <div class="card" style="border-left: 4px solid #3b82f6;">
+      <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Primary Lost Reason</span>
+      <div style="font-size: 1.3rem; font-weight: 800; color: #3b82f6; margin: 0.35rem 0;">
+        Stockout Shortage
+      </div>
+      <span style="font-size: 0.8rem; color: var(--text-secondary);">Requires production buffer</span>
+    </div>
+  </div>
+
+  <!-- Form to Record Lost Sales -->
+  <div class="card" style="margin-bottom: 1.5rem;">
+    <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.85rem;">Record Missed / Unfulfilled Sales Lead</h3>
+    <form method="post" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; align-items: flex-end;">
+      <div class="form-group" style="margin: 0;">
+        <label>Customer</label>
+        <select name="customer_id" required>
+          {% for c in customers %}
+          <option value="{{ c.id }}">{{ c.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group" style="margin: 0;">
+        <label>Requested Product</label>
+        <select name="item_id" required>
+          {% for p in products %}
+          <option value="{{ p.id }}">{{ p.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group" style="margin: 0;">
+        <label>Quantity (Packets)</label>
+        <input type="number" name="qty" min="1" placeholder="e.g. 50" required>
+      </div>
+
+      <div class="form-group" style="margin: 0;">
+        <label>Constraint Reason</label>
+        <select name="reason" required>
+          <option value="stock_shortage">Stock Shortage (Warehouse Stockout)</option>
+          <option value="production_shortage">Production Shortage (Capacity Delay)</option>
+          <option value="delivery_constraint">Delivery Constraint (Logistics)</option>
+          <option value="customer_cancellation">Customer Cancellation</option>
+          <option value="pricing">Pricing Resistance</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+
+      <div class="form-group" style="margin: 0;">
+        <label>Notes / Context</label>
+        <input type="text" name="notes" placeholder="Customer needed immediate delivery">
+      </div>
+
+      <div>
+        <button type="submit" class="btn" style="width: 100%;">Record Opportunity</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Table of Recorded Lost Sales -->
+  <div class="card">
+    <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;">Lost Demand Log</h3>
+    {% if summary.rows %}
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Customer</th>
+            <th>Product</th>
+            <th>Lost Qty</th>
+            <th>Estimated Lost Revenue</th>
+            <th>Root Reason</th>
+            <th>Salesman</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in summary.rows %}
+          <tr>
+            <td>{{ r.date }}</td>
+            <td style="font-weight: 700;">{{ r.customer_name }}</td>
+            <td>{{ r.product_name }}</td>
+            <td style="font-weight: 700; color: #ef4444;">{{ r.qty_milli | qty }} pkts</td>
+            <td style="font-weight: 700;">₹{{ r.lost_amount_paise | money }}</td>
+            <td><span class="badge submitted">{{ r.reason }}</span></td>
+            <td>{{ r.salesman_name or 'Direct' }}</td>
+            <td><span class="badge ok">{{ r.follow_up_status | upper }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p style="color: var(--text-muted); font-size: 0.88rem;">No unfulfilled lost sales recorded yet.</p>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

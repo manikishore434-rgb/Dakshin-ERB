@@ -244,6 +244,76 @@ def audit_trail(db, p):
     return {"title": f"Audit trail {f} to {t}", "sections": [{"name": "Edits, cancellations and postings", "columns": cols, "rows": rows, "totals": None}]}
 
 
+def mrp_report(db, p):
+    from . import mrp
+    res = mrp.run_mrp(db)
+    req_cols = [("Item", "text"), ("Kind", "text"), ("Gross Req", "qty"), ("On Hand", "qty"), ("Open POs", "qty"),
+                ("Safety Stock", "qty"), ("Deficit", "qty"), ("Suggested Buy", "qty"), ("Supplier", "text"), ("Est Cost", "money")]
+    req_rows = [[r["item"]["name"], r["item"]["kind"], r["gross_req_milli"], r["on_hand_milli"], r["open_po_milli"],
+                 r["safety_stock_milli"], r["net_deficit_milli"], r["suggested_buy_milli"], r["supplier_name"], r["est_cost_paise"]]
+                for r in res["material_requirements"]]
+    prod_cols = [("Product", "text"), ("Demand (pkts)", "qty"), ("On Hand", "qty"), ("Deficit", "qty"), ("Batches Needed", "int")]
+    prod_rows = [[ps["product"]["name"], ps["demanded_milli"], ps["on_hand_milli"], ps["net_deficit_milli"], ps["batches_needed"]]
+                 for ps in res["production_suggestions"]]
+    return {"title": "Material Requirements Planning (MRP) Analysis", "sections": [
+        {"name": "Raw & Packaging Material Requirements", "columns": req_cols, "rows": req_rows, "totals": _totals(req_rows, req_cols, (9,))},
+        {"name": "Finished Goods Production Requirements", "columns": prod_cols, "rows": prod_rows, "totals": None}]}
+
+
+def quality_report(db, p):
+    from . import quality
+    f, t = _range(p)
+    inspections = db.execute(
+        """SELECT qi.*, i.name item_name, u.full_name inspector
+           FROM quality_inspections qi
+           JOIN items i ON i.id=qi.item_id
+           LEFT JOIN users u ON u.id=qi.inspected_by
+           WHERE substr(qi.inspected_at,1,10) BETWEEN ? AND ?
+           ORDER BY qi.id DESC""", (f, t)).fetchall()
+    cols = [("Inspection No", "text"), ("Type", "text"), ("Status", "text"), ("Item", "text"), ("Batch", "text"),
+            ("Sample Size", "text"), ("Defect", "text"), ("Inspector", "text"), ("Date", "text")]
+    rows = [[r["inspection_no"], r["inspection_type"], r["status"].upper(), r["item_name"], r["batch_no"] or "-",
+             r["sample_size"] or "-", r["defect_category"] or "None", r["inspector"] or "System", r["inspected_at"][:10]]
+            for r in inspections]
+    return {"title": f"Quality Management & Inspection Report {f} to {t}", "sections": [
+        {"name": "Inspections Log", "columns": cols, "rows": rows, "totals": None}]}
+
+
+def supplier_payables_report(db, p):
+    from . import procurement
+    t = p.get("to") or today()
+    data = procurement.supplier_payables(db, t)
+    cols = [("Supplier", "text"), ("GSTIN", "text"), ("Phone", "text"), ("Total Purchases", "money"),
+            ("Paid Amount", "money"), ("Outstanding Dues", "money")]
+    rows = [[d["supplier"]["name"], d["supplier"]["gstin"] or "-", d["supplier"]["phone"] or "-",
+             d["total_purchases_paise"], d["total_paid_paise"], d["outstanding_paise"]]
+            for d in data]
+    return {"title": f"Supplier Payables & Dues as of {t}", "sections": [
+        {"name": "Supplier Ledger Summary", "columns": cols, "rows": rows, "totals": _totals(rows, cols, (3, 4, 5))}]}
+
+
+def profitability_report(db, p):
+    from . import profitability
+    prod_data = profitability.calculate_product_profitability(db)
+    cust_data = profitability.calculate_customer_profitability(db)
+
+    p_cols = [("Product", "text"), ("Units Sold", "qty"), ("Revenue", "money"), ("Unit Cost", "money"),
+              ("COGS", "money"), ("Gross Profit", "money"), ("Gross Margin %", "pct")]
+    p_rows = [[r["product"]["name"], r["units_sold_milli"], r["net_revenue_paise"], r["unit_cost_paise"],
+               r["cogs_paise"], r["gross_profit_paise"], r["gross_margin_pct"]]
+              for r in prod_data]
+
+    c_cols = [("Customer", "text"), ("Revenue", "money"), ("COGS", "money"), ("Gross Profit", "money"),
+              ("Margin %", "pct"), ("Outstanding", "money")]
+    c_rows = [[r["customer"]["name"], r["revenue_paise"], r["cogs_paise"], r["gross_profit_paise"],
+               r["margin_pct"], r["outstanding_paise"]]
+              for r in cust_data]
+
+    return {"title": "Profitability & Margin Intelligence Report", "sections": [
+        {"name": "Product Unit Economics & Gross Margins", "columns": p_cols, "rows": p_rows, "totals": _totals(p_rows, p_cols, (2, 4, 5))},
+        {"name": "Customer Contribution & Margins", "columns": c_cols, "rows": c_rows, "totals": _totals(c_rows, c_cols, (1, 2, 3, 5))}]}
+
+
 REPORTS = {   # slug: (title, function, roles allowed)
     "sales-register": ("Sales register", sales_register, ("admin", "accountant", "owner")),
     "customer-sales": ("Customer-wise sales", customer_sales, ("admin", "accountant", "owner")),
@@ -256,6 +326,10 @@ REPORTS = {   # slug: (title, function, roles allowed)
     "outstanding": ("Outstanding and ageing", outstanding, ("admin", "accountant", "owner")),
     "collections": ("Payments and collections", collections, ("admin", "accountant", "owner")),
     "audit": ("Audit trail", audit_trail, ("admin", "accountant", "owner")),
+    "mrp": ("Material Requirements Planning (MRP)", mrp_report, ("admin", "accountant", "owner", "production")),
+    "quality": ("Quality & Inspections", quality_report, ("admin", "accountant", "owner", "production")),
+    "supplier-payables": ("Supplier payables & dues", supplier_payables_report, ("admin", "accountant", "owner")),
+    "profitability": ("Profitability & Unit Margins", profitability_report, ("admin", "accountant", "owner")),
 }
 
 

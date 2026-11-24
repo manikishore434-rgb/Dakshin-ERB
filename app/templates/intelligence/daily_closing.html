@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}Daily Business Closing · SnackFlow ERP{% endblock %}
+{% block page_title %}{{ tr("Daily Closing") }}{% endblock %}
+{% block body %}
+<div class="daily-closing-container">
+
+  <div class="card" style="margin-bottom: 1.5rem; border-left: 4px solid var(--primary);">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h2 style="font-size: 1.4rem; font-weight: 800; margin: 0;">Daily Factory Books Closing & Reconciliation</h2>
+        <p style="color: var(--text-secondary); font-size: 0.88rem; margin: 0.25rem 0 0;">
+          Formal end-of-day reconciliation snapshot across sales invoices, cash collections, material inwards, and finished packets produced.
+        </p>
+      </div>
+
+      <form method="get" style="display: flex; gap: 0.5rem; align-items: center;">
+        <input type="date" name="date" value="{{ date }}" onchange="this.form.submit()" style="font-size: 0.85rem; padding: 0.4rem 0.6rem;">
+      </form>
+    </div>
+  </div>
+
+  <!-- Day's Metric Snapshot -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+    <div class="card" style="border-top: 3px solid #10b981;">
+      <span style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Day's Sales Invoiced</span>
+      <div style="font-size: 1.6rem; font-weight: 800; color: #10b981; margin: 0.2rem 0;">
+        ₹{{ sales.tot | money }}
+      </div>
+      <span style="font-size: 0.8rem; color: var(--text-secondary);">{{ sales.n }} invoice(s) posted</span>
+    </div>
+
+    <div class="card" style="border-top: 3px solid #3b82f6;">
+      <span style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Collections Realized</span>
+      <div style="font-size: 1.6rem; font-weight: 800; color: #3b82f6; margin: 0.2rem 0;">
+        ₹{{ payments.s | money }}
+      </div>
+      <span style="font-size: 0.8rem; color: var(--text-secondary);">{{ payments.n }} receipt voucher(s)</span>
+    </div>
+
+    <div class="card" style="border-top: 3px solid var(--primary);">
+      <span style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Finished Goods Produced</span>
+      <div style="font-size: 1.6rem; font-weight: 800; color: var(--primary); margin: 0.2rem 0;">
+        {{ runs.fg | qty }} <span style="font-size: 0.9rem; font-weight: 500; color: var(--text-muted);">packets</span>
+      </div>
+      <span style="font-size: 0.8rem; color: var(--text-secondary);">Across {{ runs.n }} completed batch(es)</span>
+    </div>
+
+    <div class="card" style="border-top: 3px solid #8b5cf6;">
+      <span style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Material Purchases</span>
+      <div style="font-size: 1.6rem; font-weight: 800; color: #8b5cf6; margin: 0.2rem 0;">
+        {{ purchases.n }} <span style="font-size: 0.9rem; font-weight: 500; color: var(--text-muted);">inward(s)</span>
+      </div>
+      <span style="font-size: 0.8rem; color: var(--text-secondary);">Raw material & packaging</span>
+    </div>
+  </div>
+
+  <!-- Sign-off Action Card -->
+  <div class="card">
+    {% if record %}
+    <div style="padding: 1rem; border-radius: var(--radius-md); background: var(--status-success-bg); border: 1px solid var(--status-success-border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <div style="font-weight: 800; color: var(--status-success-text); font-size: 1rem;">
+          ✓ Daily Books Officially Closed for {{ date }}
+        </div>
+        <div style="font-size: 0.82rem; color: var(--status-success-text); margin-top: 0.2rem;">
+          Sign-off timestamp: {{ record.closed_at }}
+        </div>
+        {% if record.notes %}
+        <div style="font-size: 0.8rem; color: var(--status-success-text); margin-top: 0.25rem;">
+          Closing memo: <em>{{ record.notes }}</em>
+        </div>
+        {% endif %}
+      </div>
+      <span class="badge approved" style="font-size: 0.85rem; padding: 0.4rem 0.75rem;">AUDITED & LOCKED</span>
+    </div>
+    {% else %}
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0;">Execute Daily Books Sign-off</h3>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0.2rem 0 0;">
+          Locks daily totals into the audit register and confirms day-end stock reconciliation.
+        </p>
+      </div>
+
+      <form method="post" style="display: flex; gap: 0.5rem; align-items: center;">
+        <input type="text" name="notes" placeholder="Optional closing supervisor note" style="font-size: 0.85rem; padding: 0.45rem 0.75rem;">
+        <button type="submit" class="btn" style="background: #10b981; border-color: #10b981;">
+          Sign & Close Books ✓
+        </button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

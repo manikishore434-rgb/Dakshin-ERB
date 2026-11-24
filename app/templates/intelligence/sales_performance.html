@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}Sales Performance & Leaderboards · SnackFlow ERP{% endblock %}
+{% block page_title %}{{ tr("Sales Performance") }}{% endblock %}
+{% block body %}
+<div class="sales-performance-container">
+
+  <div class="card" style="margin-bottom: 1.5rem; border-left: 4px solid var(--primary);">
+    <h2 style="font-size: 1.4rem; font-weight: 800; margin: 0;">Sales Territory Leaderboard</h2>
+    <p style="color: var(--text-secondary); font-size: 0.88rem; margin: 0.25rem 0 0;">
+      Field sales metrics, target achievement percentages, and distributor conversion rates across territories.
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Sales Representative</th>
+            <th>Orders Booked</th>
+            <th>Monthly Sales Target</th>
+            <th>Achieved Sales (₹)</th>
+            <th>Target Progress</th>
+            <th>Performance Tier</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in ranks %}
+          <tr>
+            <td>
+              <span class="badge {% if loop.index == 1 %}approved{% else %}secondary{% endif %}" style="font-size:0.85rem;">
+                #{{ loop.index }}
+              </span>
+            </td>
+            <td style="font-weight: 700; font-size: 0.95rem;">{{ s.name }}</td>
+            <td>{{ s.orders }} order(s)</td>
+            <td>₹{{ s.target_paise | money }}</td>
+            <td style="font-weight: 800; color: var(--primary);">₹{{ s.achieved_paise | money }}</td>
+            <td>
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <div style="flex:1; max-width: 100px; height: 8px; background: var(--border-color); border-radius: 4px; overflow: hidden;">
+                  <div style="width: {{ [s.ach_pct, 100] | min }}%; height: 100%; background: #10b981;"></div>
+                </div>
+                <strong>{{ s.ach_pct }}%</strong>
+              </div>
+            </td>
+            <td>
+              {% if s.ach_pct >= 80 %}
+              <span class="badge approved">STAR PERFORMER ⭐</span>
+              {% elif s.ach_pct >= 50 %}
+              <span class="badge submitted">ON TRACK</span>
+              {% else %}
+              <span class="badge invoiced">DEVELOPING</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

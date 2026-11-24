@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}Business Continuity Simulator · SnackFlow ERP{% endblock %}
+{% block page_title %}Business Continuity Simulator{% endblock %}
+{% block body %}
+<div class="continuity-container">
+
+  <div class="card" style="margin-bottom: 1.5rem; border-left: 4px solid var(--primary);">
+    <h2 style="font-size: 1.4rem; font-weight: 800; margin: 0;">Supply Chain Disruption & Continuity Stress Test</h2>
+    <p style="color: var(--text-secondary); font-size: 0.88rem; margin: 0.25rem 0 0;">
+      Simulates sudden vendor unavailability, material embargoes, and transport strikes against current floor inventory reserves.
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Critical Resource</th>
+            <th>Current Reserve</th>
+            <th>Daily Burn Rate</th>
+            <th>Days to Plant Shutdown</th>
+            <th>Resilience Assessment</th>
+            <th>Emergency Contingency Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in cases %}
+          <tr>
+            <td style="font-weight: 700;">{{ c.item_name }}</td>
+            <td>{{ c.stock | qty }} {{ c.unit }}</td>
+            <td>{{ c.daily_rate | qty }} {{ c.unit }}/day</td>
+            <td>
+              <strong style="font-size: 1.15rem; color: {% if c.days_until_shutdown <= 3 %}#ef4444{% elif c.days_until_shutdown <= 7 %}#f59e0b{% else %}#10b981{% endif %};">
+                {{ c.days_until_shutdown }} day(s)
+              </strong>
+            </td>
+            <td>
+              <span class="badge {% if c.risk_level == 'Critical Risk' %}rejected{% elif c.risk_level == 'Moderate' %}submitted{% else %}approved{% endif %}">
+                {{ c.risk_level }}
+              </span>
+            </td>
+            <td style="font-size: 0.82rem; color: var(--text-secondary);">
+              {% if c.days_until_shutdown <= 3 %}
+              Engage emergency secondary vendor immediately; place express purchase order.
+              {% elif c.days_until_shutdown <= 7 %}
+              Review active supplier transit ETA; monitor daily floor issues.
+              {% else %}
+              Adequate safety stock buffer maintains uninterrupted continuous line shifts.
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

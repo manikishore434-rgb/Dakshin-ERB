@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% block title %}Digital Factory Simulation · SnackFlow ERP{% endblock %}
+{% block page_title %}Digital Factory Simulation{% endblock %}
+{% block body %}
+<div class="digital-factory-container">
+
+  <div class="card" style="margin-bottom: 1.5rem; border-left: 4px solid var(--primary);">
+    <h2 style="font-size: 1.4rem; font-weight: 800; margin: 0;">Interactive Digital Food Factory Twin</h2>
+    <p style="color: var(--text-secondary); font-size: 0.88rem; margin: 0.25rem 0 0;">
+      Real-time animated visualization of raw material batch flow through extrusion, deep-frying, quality inspection, and form-fill packaging. <em>(Software operational simulation)</em>.
+    </p>
+  </div>
+
+  <div class="card" style="padding: 2rem 1.5rem; background: var(--bg-surface-elevated); margin-bottom: 1.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+      <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0;">Automated Batch Execution Pipeline</h3>
+      <div style="display: flex; gap: 0.5rem;">
+        <button type="button" class="btn btn-sm" onclick="triggerSimulation()">Simulate Batch Run 🚀</button>
+        <button type="button" class="btn secondary btn-sm" onclick="resetSimulation()">Reset</button>
+      </div>
+    </div>
+
+    <!-- Factory Flow Stations Grid -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.75rem; text-align: center;">
+      <!-- Station 1 -->
+      <div id="st-1" class="factory-station" style="padding:1rem 0.5rem; background:var(--bg-surface); border-radius:var(--radius-md); border:2px solid var(--border-color); transition: all 0.3s ease;">
+        <div style="font-size: 1.8rem; margin-bottom: 0.25rem;">🌾</div>
+        <div style="font-weight: 700; font-size: 0.82rem;">1. Raw Inward</div>
+        <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.2rem;">Flour & Oil WAC</div>
+        <div class="st-indicator" style="margin-top:0.5rem; font-size:0.68rem; font-weight:700; color:#10b981;">READY</div>
+      </div>
+
+      <!-- Station 2 -->
+      <div id="st-2" class="factory-station" style="padding:1rem 0.5rem; background:var(--bg-surface); border-radius:var(--radius-md); border:2px solid var(--border-color); transition: all 0.3s ease;">
+        <div style="font-size: 1.8rem; margin-bottom: 0.25rem;">🥣</div>
+        <div style="font-weight: 700; font-size: 0.82rem;">2. Dough Mixing</div>
+        <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.2rem;">Recipe Extrusion</div>
+        <div class="st-indicator" style="margin-top:0.5rem; font-size:0.68rem; font-weight:700; color:var(--text-muted);">STANDBY</div>
+      </div>
+
+      <!-- Station 3 -->
+      <div id="st-3" class="factory-station" style="padding:1rem 0.5rem; background:var(--bg-surface); border-radius:var(--radius-md); border:2px solid var(--border-color); transition: all 0.3s ease;">
+        <div style="font-size: 1.8rem; margin-bottom: 0.25rem;">🍳</div>
+        <div style="font-weight: 700; font-size: 0.82rem;">3. Deep Frying</div>
+        <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.2rem;">180°C Oil Cycle</div>
+        <div class="st-indicator" style="margin-top:0.5rem; font-size:0.68rem; font-weight:700; color:var(--text-muted);">STANDBY</div>
+      </div>
+
+      <!-- Station 4 -->
+      <div id="st-4" class="factory-station" style="padding:1rem 0.5rem; background:var(--bg-surface); border-radius:var(--radius-md); border:2px solid var(--border-color); transition: all 0.3s ease;">
+        <div style="font-size: 1.8rem; margin-bottom: 0.25rem;">🔬</div>
+        <div style="font-weight: 700; font-size: 0.82rem;">4. Quality Check</div>
+        <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.2rem;">Moisture & Crisp</div>
+        <div class="st-indicator" style="margin-top:0.5rem; font-size:0.68rem; font-weight:700; color:var(--text-muted);">STANDBY</div>
+      </div>
+
+      <!-- Station 5 -->
+      <div id="st-5" class="factory-station" style="padding:1rem 0.5rem; background:var(--bg-surface); border-radius:var(--radius-md); border:2px solid var(--border-color); transition: all 0.3s ease;">
+        <div style="font-size: 1.8rem; margin-bottom: 0.25rem;">📦</div>
+        <div style="font-weight: 700; font-size: 0.82rem;">5. FFS Packaging</div>
+        <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.2rem;">200g Pouch Sealing</div>
+        <div class="st-indicator" style="margin-top:0.5rem; font-size:0.68rem; font-weight:700; color:var(--text-muted);">STANDBY</div>
+      </div>
+
+      <!-- Station 6 -->
+      <div id="st-6" class="factory-station" style="padding:1rem 0.5rem; background:var(--bg-surface); border-radius:var(--radius-md); border:2px solid var(--border-color); transition: all 0.3s ease;">
+        <div style="font-size: 1.8rem; margin-bottom: 0.25rem;">🚚</div>
+        <div style="font-weight: 700; font-size: 0.82rem;">6. Dispatch Dock</div>
+        <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.2rem;">GST Bill & Carton</div>
+        <div class="st-indicator" style="margin-top:0.5rem; font-size:0.68rem; font-weight:700; color:var(--text-muted);">STANDBY</div>
+      </div>
+    </div>
+
+    <!-- Live Simulation Progress Log -->
+    <div style="margin-top: 1.5rem; padding: 0.85rem; border-radius: var(--radius-sm); background: var(--bg-surface); border: 1px solid var(--border-color);">
+      <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">Live Simulation Telemetry Log:</div>
+      <div id="sim-log" style="font-family: var(--font-mono); font-size: 0.82rem; color: var(--text-secondary); height: 60px; overflow-y: auto;">
+        [IDLE] Factory ready. Click "Simulate Batch Run" to start automated discrete event flow.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let step = 0;
+  let timer = null;
+  const messages = [
+    "Raw materials (Flour 40kg, Oil 10.5L) issued from stock ledger.",
+    "Extruder rotating dough spirals; standard recipe blend completed.",
+    "Deep fryer running at 180°C. Batch cooked in 8.5 minutes.",
+    "Quality sensor check: Moisture 2.1% (PASS), Aroma/Crispness (PASS).",
+    "Form-Fill-Seal packaging 188 good packets into 200g pouches; 6 pouches scrap.",
+    "Finished goods credited to warehouse; 9 cartons loaded for dispatch dock."
+  ];
+
+  function triggerSimulation() {
+    resetSimulation();
+    step = 1;
+    runNextStation();
+  }
+
+  function runNextStation() {
+    if (step > 6) {
+      document.getElementById('sim-log').innerHTML += "<br><span style='color:#10b981; font-weight:700;'>[SUCCESS] Batch production run simulation finished 100%!</span>";
+      return;
+    }
+    const prev = document.getElementById('st-' + (step - 1));
+    if (prev) {
+      prev.style.borderColor = "#10b981";
+      prev.querySelector('.st-indicator').textContent = "DONE ✓";
+      prev.querySelector('.st-indicator').style.color = "#10b981";
+    }
+    const cur = document.getElementById('st-' + step);
+    cur.style.borderColor = "var(--primary)";
+    cur.style.boxShadow = "0 0 12px rgba(217,119,6,0.3)";
+    cur.querySelector('.st-indicator').textContent = "PROCESSING...";
+    cur.querySelector('.st-indicator').style.color = "var(--primary)";
+
+    const log = document.getElementById('sim-log');
+    log.innerHTML += "<br>[STATION " + step + "] " + messages[step - 1];
+    log.scrollTop = log.scrollHeight;
+
+    step++;
+    timer = setTimeout(runNextStation, 900);
+  }
+
+  function resetSimulation() {
+    clearTimeout(timer);
+    step = 0;
+    for (let i = 1; i <= 6; i++) {
+      const el = document.getElementById('st-' + i);
+      el.style.borderColor = "var(--border-color)";
+      el.style.boxShadow = "none";
+      el.querySelector('.st-indicator').textContent = i === 1 ? "READY" : "STANDBY";
+      el.querySelector('.st-indicator').style.color = i === 1 ? "#10b981" : "var(--text-muted)";
+    }
+    document.getElementById('sim-log').textContent = "[RESET] Factory reset to standby state.";
+  }
+</script>
+{% endblock %}

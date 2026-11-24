@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% block title %}Digital Batch Card · {{ s.run.batch_no }} · SnackFlow ERP{% endblock %}
+{% block page_title %}Digital Batch Card{% endblock %}
+{% block body %}
+<div class="batch-card-print-container" style="max-width: 850px; margin: 0 auto;">
+
+  <!-- Print Action Toolbar -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;" class="no-print">
+    <a href="{{ url_for('production.run_detail', rid=s.run.id) }}" class="btn secondary btn-sm">← Back to Batch Run</a>
+    <button type="button" class="btn btn-sm" onclick="window.print()">Print Batch Card / Save PDF 🖨️</button>
+  </div>
+
+  <!-- Enterprise Batch Traveler Card -->
+  <div class="card" style="border: 2px solid var(--border-color); padding: 2rem; background: var(--bg-surface);">
+
+    <!-- Header with Brand and QR Code -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--primary); padding-bottom: 1.25rem; margin-bottom: 1.25rem;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
+          <span style="font-weight: 800; font-size: 1.4rem; color: var(--text-primary);">SnackFlow<span style="color:var(--primary);">ERP</span></span>
+          <span class="badge ok">OFFICIAL BATCH TRAVELER</span>
+        </div>
+        <div style="font-size: 0.85rem; color: var(--text-secondary);">Sri Murugan Snacks · NIT Trichy CDI Benchmark</div>
+        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">FSSAI Lic. No: 12421000000001 · GSTIN: 33AAAAA0000A1Z5</div>
+      </div>
+
+      <!-- QR Representation & Batch Code -->
+      <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end;">
+        <div style="width: 80px; height: 80px; background: #ffffff; border: 2px solid var(--text-primary); border-radius: 6px; display: flex; align-items: center; justify-content: center; margin-bottom: 0.35rem; padding: 4px;">
+          <!-- SVG QR Code Icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" style="width: 100%; height: 100%;">
+            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+            <rect x="14" y="14" width="3" height="3"/><rect x="17" y="17" width="4" height="4"/>
+          </svg>
+        </div>
+        <span style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted);">SCAN TO VERIFY</span>
+      </div>
+    </div>
+
+    <!-- Core Batch Meta Matrix -->
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; background: var(--bg-surface-elevated); padding: 1rem; border-radius: var(--radius-md);">
+      <div>
+        <div style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Batch Number</div>
+        <div style="font-family: var(--font-mono); font-weight: 800; font-size: 1.1rem; color: var(--primary);">{{ s.run.batch_no }}</div>
+      </div>
+      <div>
+        <div style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Product</div>
+        <div style="font-weight: 700; font-size: 0.95rem;">{{ s.run.product_name }}</div>
+      </div>
+      <div>
+        <div style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Date of Mfg</div>
+        <div style="font-weight: 700; font-size: 0.95rem;">{{ s.run.date }}</div>
+      </div>
+      <div>
+        <div style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Best Before</div>
+        <div style="font-weight: 700; font-size: 0.95rem;">{{ s.run.expiry or '90 Days' }}</div>
+      </div>
+    </div>
+
+    <!-- Output & Yield Matrix -->
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+      <div style="padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+        <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Expected Yield</div>
+        <div style="font-size: 1.25rem; font-weight: 800;">{{ s.run.expected_milli | qty }} pkts</div>
+      </div>
+      <div style="padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+        <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Actual Good Packets</div>
+        <div style="font-size: 1.25rem; font-weight: 800; color: #10b981;">{{ s.run.actual_milli | qty }} pkts</div>
+      </div>
+      <div style="padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+        <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Yield Variance</div>
+        <div style="font-size: 1.25rem; font-weight: 800; color: {% if s.yield_flag %}#ef4444{% else %}#10b981{% endif %};">
+          {{ s.yield_var_pct }}%
+        </div>
+      </div>
+      <div style="padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+        <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Damaged Pouches</div>
+        <div style="font-size: 1.25rem; font-weight: 800; color: {% if s.run.damaged_milli > 0 %}#f59e0b{% else %}#10b981{% endif %};">
+          {{ s.run.damaged_milli | qty }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Material Consumption Ledger Breakdown -->
+    <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 0.65rem;">Raw Material & Packaging Actual Consumption</h4>
+    <table style="margin-bottom: 1.5rem; font-size: 0.82rem;">
+      <thead>
+        <tr>
+          <th>Ingredient</th>
+          <th>Planned Qty</th>
+          <th>Actual Issued</th>
+          <th>Variance %</th>
+          <th>Weighted Cost (₹)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for l in s.lines %}
+        <tr>
+          <td style="font-weight: 600;">{{ l.name }}</td>
+          <td>{{ l.planned_milli | qty }} {{ l.base_unit }}</td>
+          <td style="font-weight: 700;">{{ l.actual_milli | qty }} {{ l.base_unit }}</td>
+          <td>
+            <span class="badge {% if l.flag %}rejected{% else %}approved{% endif %}">
+              {{ l.var_pct }}%
+            </span>
+          </td>
+          <td>₹{{ l.actual_value_paise | money }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <!-- Cost Absorption & Sign-Off Footer -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1.25rem;">
+      <div>
+        <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">Batch Cost Summary</div>
+        <div style="font-size: 0.85rem; line-height: 1.6;">
+          Total Direct Materials: <strong>₹{{ s.material_paise | money }}</strong><br>
+          Direct Overheads (Labour/Power): <strong>₹{{ s.direct_overhead_paise | money }}</strong><br>
+          Allocated Common Pool: <strong>₹{{ s.allocated_overhead_paise | money }}</strong><br>
+          <div style="font-size: 1.05rem; font-weight: 800; color: var(--primary); margin-top: 0.25rem;">
+            Unit Cost per Packet: ₹{{ s.cost_per_packet_paise | money }}
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; justify-content: flex-end; text-align: right;">
+        <div style="border-top: 1px dashed var(--text-muted); width: 180px; margin-left: auto; padding-top: 0.35rem; font-size: 0.78rem; color: var(--text-muted);">
+          Production Supervisor Sign-off
+        </div>
+        <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem;">
+          Verified under ISO/FSSAI HACCP Batch Tracking Protocol
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

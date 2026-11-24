@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}Customer Intelligence & CRM · SnackFlow ERP{% endblock %}
+{% block page_title %}{{ tr("Customer Intelligence") }}{% endblock %}
+{% block body %}
+<div class="customer-intelligence-container">
+
+  <div class="card" style="margin-bottom: 1.5rem; border-left: 4px solid var(--primary);">
+    <h2 style="font-size: 1.4rem; font-weight: 800; margin: 0;">Dealer & Retailer Intelligence (CRM)</h2>
+    <p style="color: var(--text-secondary); font-size: 0.88rem; margin: 0.25rem 0 0;">
+      Order recency, lifetime sales contribution, churn risk indicator, and credit exposure across distributor networks.
+    </p>
+  </div>
+
+  <div class="card">
+    {% if custs %}
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Customer</th>
+            <th>Type</th>
+            <th>State</th>
+            <th>Field Salesman</th>
+            <th>Total Orders</th>
+            <th>Days Since Order</th>
+            <th>Lifetime Sales (₹)</th>
+            <th>Current Dues (₹)</th>
+            <th>Credit Limit</th>
+            <th>Churn Risk</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in custs %}
+          <tr>
+            <td style="font-weight: 700;">{{ c.name }}</td>
+            <td><span class="badge info">{{ c.type }}</span></td>
+            <td>{{ c.state_name }}</td>
+            <td>{{ c.salesman }}</td>
+            <td>{{ c.order_count }}</td>
+            <td>
+              {% if c.days_since_last != 'No Orders' %}
+              <strong>{{ c.days_since_last }} day(s)</strong>
+              {% else %}
+              <span style="color:var(--text-muted);">No Orders</span>
+              {% endif %}
+            </td>
+            <td style="font-weight: 700;">₹{{ c.lifetime_sales_paise | money }}</td>
+            <td style="font-weight: 700; color: {% if c.outstanding_paise > 0 %}#ef4444{% else %}#10b981{% endif %};">
+              ₹{{ c.outstanding_paise | money }}
+            </td>
+            <td>₹{{ c.credit_limit_paise | money }}</td>
+            <td>
+              {% if c.churn_risk == 'High Churn Risk' %}
+              <span class="badge rejected">HIGH RISK</span>
+              {% elif c.churn_risk == 'Moderate Risk' %}
+              <span class="badge submitted">MODERATE</span>
+              {% elif c.churn_risk == 'New Prospect' %}
+              <span class="badge invoiced">PROSPECT</span>
+              {% else %}
+              <span class="badge approved">LOYAL / ACTIVE</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

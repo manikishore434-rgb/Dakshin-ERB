@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% block title %}What-If Business Scenario Simulator · SnackFlow ERP{% endblock %}
+{% block page_title %}What-If Business Simulator{% endblock %}
+{% block body %}
+<div class="simulator-container">
+
+  <div class="card" style="margin-bottom: 1.5rem; border-left: 4px solid var(--primary);">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h2 style="font-size: 1.4rem; font-weight: 800; margin: 0;">Interactive Financial & Operational Scenario Sandbox</h2>
+        <p style="color: var(--text-secondary); font-size: 0.88rem; margin: 0.25rem 0 0;">
+          Simulate commodity price shocks, retail price elasticity, demand spikes, and yield shifts. <em>(Sandbox simulation: Does not modify ledger records)</em>.
+        </p>
+      </div>
+      <div>
+        <a href="{{ url_for('intelligence.simulator_continuity') }}" class="btn secondary btn-sm">Continuity Simulator →</a>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+    <!-- Simulator Parameters Control Form -->
+    <div class="card">
+      <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1.25rem;">Simulation Levers</h3>
+      <form method="get" id="sim-form">
+        <div class="form-group">
+          <label style="display:flex; justify-content:space-between;">
+            <span>Raw Material Price Shift (%)</span>
+            <strong id="rm-val">{{ rm_p }}%</strong>
+          </label>
+          <input type="range" name="rm_p" min="-30" max="50" step="1" value="{{ rm_p }}" oninput="document.getElementById('rm-val').textContent=this.value+'%'">
+          <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-muted);">
+            <span>-30% Deflation</span>
+            <span>0% Base</span>
+            <span>+50% Inflation</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label style="display:flex; justify-content:space-between;">
+            <span>Selling Price Change (%)</span>
+            <strong id="sp-val">{{ sp_p }}%</strong>
+          </label>
+          <input type="range" name="sp_p" min="-20" max="30" step="1" value="{{ sp_p }}" oninput="document.getElementById('sp-val').textContent=this.value+'%'">
+          <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-muted);">
+            <span>-20% Discount</span>
+            <span>0% MRP</span>
+            <span>+30% Premium</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label style="display:flex; justify-content:space-between;">
+            <span>Market Demand Volume Change (%)</span>
+            <strong id="dem-val">{{ dem_p }}%</strong>
+          </label>
+          <input type="range" name="dem_p" min="-50" max="100" step="5" value="{{ dem_p }}" oninput="document.getElementById('dem-val').textContent=this.value+'%'">
+          <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-muted);">
+            <span>-50% Slump</span>
+            <span>0% Baseline (1,000 pkts)</span>
+            <span>+100% Surge</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label style="display:flex; justify-content:space-between;">
+            <span>Production Yield Efficiency (%)</span>
+            <strong id="yld-val">{{ yld_p }}%</strong>
+          </label>
+          <input type="range" name="yld_p" min="-10" max="10" step="0.5" value="{{ yld_p }}" oninput="document.getElementById('yld-val').textContent=this.value+'%'">
+          <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-muted);">
+            <span>-10% Wastage</span>
+            <span>0% Standard Yield</span>
+            <span>+10% High Efficiency</span>
+          </div>
+        </div>
+
+        <button type="submit" class="btn" style="width:100%; margin-top:0.5rem;">Recalculate Pro-Forma Model 🔄</button>
+      </form>
+    </div>
+
+    <!-- Projected Pro-Forma Economics Results -->
+    <div class="card" style="border-top: 4px solid #10b981;">
+      <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1.25rem;">Projected Pro-Forma Performance</h3>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+        <div style="padding: 0.85rem; background: var(--bg-surface-elevated); border-radius: var(--radius-md);">
+          <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Simulated Packet Price</div>
+          <div style="font-size: 1.4rem; font-weight: 800; color: var(--text-primary); margin: 0.2rem 0;">₹{{ sim.sim_price_paise | money }}</div>
+          <div style="font-size: 0.75rem; color: var(--text-secondary);">Cost: ₹{{ sim.sim_cost_paise | money }} / pkt</div>
+        </div>
+
+        <div style="padding: 0.85rem; background: var(--bg-surface-elevated); border-radius: var(--radius-md);">
+          <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Simulated Monthly Output</div>
+          <div style="font-size: 1.4rem; font-weight: 800; color: var(--primary); margin: 0.2rem 0;">{{ sim.sim_volume }} pkts</div>
+          <div style="font-size: 0.75rem; color: var(--text-secondary);">Break-Even: {{ sim.break_even_units }} pkts</div>
+        </div>
+
+        <div style="padding: 0.85rem; background: var(--bg-surface-elevated); border-radius: var(--radius-md);">
+          <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Projected Gross Revenue</div>
+          <div style="font-size: 1.4rem; font-weight: 800; color: #3b82f6; margin: 0.2rem 0;">₹{{ sim.sim_revenue_paise | money }}</div>
+          <div style="font-size: 0.75rem; color: var(--text-secondary);">Pre-tax turnover</div>
+        </div>
+
+        <div style="padding: 0.85rem; background: var(--bg-surface-elevated); border-radius: var(--radius-md);">
+          <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Projected Gross Margin</div>
+          <div style="font-size: 1.4rem; font-weight: 800; color: {% if sim.sim_margin_pct > 0 %}#10b981{% else %}#ef4444{% endif %}; margin: 0.2rem 0;">
+            {{ sim.sim_margin_pct }}%
+          </div>
+          <div style="font-size: 0.75rem; color: var(--text-secondary);">Profit: ₹{{ sim.sim_profit_paise | money }}</div>
+        </div>
+      </div>
+
+      <!-- Sensitivity Shift Note -->
+      <div style="padding: 0.75rem 1rem; border-radius: var(--radius-md); background: {% if sim.delta_profit_vs_baseline >= 0 %}var(--status-success-bg){% else %}var(--status-danger-bg){% endif %}; border: 1px solid {% if sim.delta_profit_vs_baseline >= 0 %}var(--status-success-border){% else %}var(--status-danger-border){% endif %};">
+        <div style="font-weight: 700; font-size: 0.85rem; color: {% if sim.delta_profit_vs_baseline >= 0 %}var(--status-success-text){% else %}var(--status-danger-text){% endif %};">
+          {% if sim.delta_profit_vs_baseline >= 0 %}
+          ✓ Net Profit Gain vs Baseline: +₹{{ sim.delta_profit_vs_baseline | money }} / month
+          {% else %}
+          ⚠️ Net Profit Erosion vs Baseline: -₹{{ (-sim.delta_profit_vs_baseline) | money }} / month
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Batch Verification · SnackFlow ERP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body style="background: #f8fafc; color: #0f172a; padding: 2rem 1rem;">
+  <div style="max-width: 520px; margin: 0 auto; background: #ffffff; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; overflow: hidden;">
+
+    <!-- Card Header -->
+    <div style="background: linear-gradient(135deg, #b45309 0%, #d97706 100%); padding: 1.75rem 1.5rem; text-align: center; color: #ffffff;">
+      <div style="font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em;">SnackFlow Verified</div>
+      <div style="font-size: 0.82rem; opacity: 0.9; margin-top: 0.2rem;">Official Product Authenticity & Quality Verification</div>
+    </div>
+
+    <div style="padding: 1.75rem 1.5rem;">
+      {% if found %}
+      <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 1.25rem;">
+        <span style="display: inline-block; width: 10px; height: 10px; background: #10b981; border-radius: 50%;"></span>
+        <strong style="color: #10b981; font-size: 0.95rem;">GENUINE FOOD BATCH VERIFIED</strong>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 0.85rem; font-size: 0.88rem;">
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.5rem;">
+          <span style="color: #64748b;">Batch Code</span>
+          <strong style="font-family: 'JetBrains Mono', monospace; color: #d97706;">{{ run.batch_no }}</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.5rem;">
+          <span style="color: #64748b;">Product</span>
+          <strong>{{ run.product_name }}</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.5rem;">
+          <span style="color: #64748b;">HSN Code</span>
+          <code>{{ run.hsn or '2106 90 99' }}</code>
+        </div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.5rem;">
+          <span style="color: #64748b;">Date of Manufacturing</span>
+          <strong>{{ run.date }}</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.5rem;">
+          <span style="color: #64748b;">Best Before Date</span>
+          <strong style="color: #059669;">{{ run.expiry or '90 Days from Mfg' }}</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.5rem;">
+          <span style="color: #64748b;">Quality Status</span>
+          <span style="background: #dcfce7; color: #166534; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.78rem;">
+            {{ run.qa_status | upper if run.qa_status else 'PASSED' }}
+          </span>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+          <span style="color: #64748b;">Manufacturer</span>
+          <span style="text-align: right; font-weight: 600;">Sri Murugan Snacks, Trichy</span>
+        </div>
+      </div>
+
+      <div style="margin-top: 1.5rem; padding: 0.75rem; background: #f8fafc; border-radius: 8px; font-size: 0.75rem; color: #64748b; text-align: center;">
+        FSSAI Quality Assurance Certificate Issued · Certified Traceability Standard
+      </div>
+      {% else %}
+      <div style="text-align: center; padding: 1.5rem 0;">
+        <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚠️</div>
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: #ef4444;">Batch Not Recognized</h3>
+        <p style="font-size: 0.85rem; color: #64748b; margin-top: 0.35rem;">
+          No matching factory manufacturing record found for batch code "<code>{{ batch_no }}</code>".
+        </p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Footer -->
+    <div style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 1rem; text-align: center; font-size: 0.75rem; color: #94a3b8;">
+      SnackFlow ERP · NIT Tiruchirappalli Digital Infrastructure
+    </div>
+  </div>
+</body>
+</html>

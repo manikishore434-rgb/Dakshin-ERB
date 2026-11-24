@@ -111,6 +111,13 @@
         ✓ Authorize & Approve Order
       </button>
     </form>
+    {% if checks|selectattr('shortage')|list %}
+    <form method="post" action="{{ url_for('admin.order_plan_production', oid=o.id) }}" style="margin-top:0.65rem;">
+      <button type="submit" class="btn secondary" style="width:100%; border-color:#d97706; color:#d97706; font-weight:700;">
+        ⚙️ Auto-Plan Production Batches for Shortage →
+      </button>
+    </form>
+    {% endif %}
   </div>
 
   <!-- Rejection Card -->

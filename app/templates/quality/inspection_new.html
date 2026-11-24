@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}New Quality Inspection - SNACKFLOW ERP{% endblock %}
+
+{% block body %}
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Register Quality Inspection</h1>
+    <div class="page-subtitle">Initiate quality testing for raw material receipts, in-process mixes, or finished batches.</div>
+  </div>
+</div>
+
+<div class="card" style="max-width:700px; margin:auto;">
+  <form method="post" action="{{ url_for('quality.inspection_new') }}">
+    <div class="form-grid-2">
+      <div class="form-group">
+        <label for="inspection_type">Inspection Stage</label>
+        <select name="inspection_type" id="inspection_type" required>
+          <option value="finished_goods">Finished Goods Batch Inspection</option>
+          <option value="incoming_rm">Incoming Raw Material / GRN</option>
+          <option value="in_process">In-Process Production Inspection</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="item_id">Item to Inspect</label>
+        <select name="item_id" id="item_id" required>
+          {% for it in items %}
+          <option value="{{ it.id }}">{{ it.name }} ({{ it.code }}) - [{{ it.kind }}]</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="form-grid-2">
+      <div class="form-group">
+        <label for="reference_type">Reference Document Type</label>
+        <select name="reference_type" id="reference_type" required>
+          <option value="production_run">Production Run</option>
+          <option value="purchase">Purchase Receipt / GRN</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="reference_id">Reference ID</label>
+        <input type="number" name="reference_id" id="reference_id" placeholder="e.g. Run ID or Purchase ID" required value="1">
+      </div>
+    </div>
+
+    <div class="form-grid-2">
+      <div class="form-group">
+        <label for="batch_no">Batch / Lot Number</label>
+        <input type="text" name="batch_no" id="batch_no" placeholder="e.g. FG-MUR200-20261123-01">
+      </div>
+
+      <div class="form-group">
+        <label for="sample_size">Sample Size Tested</label>
+        <input type="text" name="sample_size" id="sample_size" placeholder="e.g. 5 packets / 200g sample">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="notes">Inspection Notes / Observations</label>
+      <textarea name="notes" id="notes" rows="3" placeholder="Visual appearance, moisture, texture, aroma, sealing integrity..."></textarea>
+    </div>
+
+    <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-top:1.5rem;">
+      <a href="{{ url_for('quality.inspections') }}" class="btn btn-secondary">Cancel</a>
+      <button type="submit" class="btn btn-primary">Create Inspection & Proceed →</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

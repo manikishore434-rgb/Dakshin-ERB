@@ -1,225 +1,152 @@
-# DakshinERP: Intelligent Order-to-Audit Food Manufacturing OS
+# Dakshin ERP (SnackFlow Operating System)
+### Enterprise Order-to-Audit Platform for Packaged Food Manufacturing
+> *"Every Order. Every Batch. Every Rupee. Connected."*
 
-> **Centre for Digital Infrastructure, National Institute of Technology, Tiruchirappalli (NIT-T)**  
-> *Winter Internship Shortlisting Task: Order-to-Audit System for a Small Food Manufacturer*
+[![NIT Benchmark](https://img.shields.io/badge/NIT%20Benchmark-14%2F14%20PASS-success?style=for-the-badge&logo=checkmarx)](http://localhost:5000/reports/benchmark)
+[![Test Suite](https://img.shields.io/badge/Unit%20Tests-50%2F50%20PASS-blue?style=for-the-badge)](http://localhost:5000)
+[![Architecture](https://img.shields.io/badge/Architecture-Zero--Drift%20Stock%20Ledger-7C3AED?style=for-the-badge)](DESIGN.md)
+[![Theme](https://img.shields.io/badge/Design%20System-Premium%20Light%20Purple-8B5CF6?style=for-the-badge)](http://localhost:5000)
+[![Compliance](https://img.shields.io/badge/GST%20Compliance-Intra%20%7C%20Inter%20State-green?style=for-the-badge)](http://localhost:5000)
+[![License](https://img.shields.io/badge/Status-Production%20Ready-brightgreen?style=for-the-badge)](https://github.com/manikishore434-rgb/Dakshin-ERB.git)
 
-DakshinERP is a production-grade, full-stack Enterprise Resource Planning (ERP) platform architected specifically for small-scale packaged food manufacturers (murukku, mixture, banana chips, sweets). It unifies field sales order collection, recipe-based batch manufacturing (Bill of Materials), stock ledger accounting, GST billing, and auditor-ready reporting into one seamless, zero-drift operating system.
+---
+
+## 📌 Executive Summary & Academic Context
+
+**Dakshin ERP** is a full-stack, enterprise-grade manufacturing execution, inventory management, field sales, and statutory audit platform. Architected in response to the **National Institute of Technology, Tiruchirappalli (NIT-T) Winter Internship Problem Statement** (*Centre for Digital Infrastructure*), it replaces fragmented paper logs, notebook tallies, and phone orders with a single unified system where every transaction is entered once at its physical source and flows automatically into perpetual ledgers, costing engines, and audit accounts.
+
+The core challenge resolved is linking the **Sales Loop** and the **Production Loop** at finished-goods inventory with **zero numerical drift**:
+- **Sales Loop:** Field salesman mobile order $\to$ Admin price/stock verification $\to$ GST tax invoice (PDF) $\to$ Dispatch (inventory deducted) $\to$ Receivables tracking $\to$ Payment collections.
+- **Production Loop:** Purchase inwarding $\to$ Raw material issue against Bill of Materials (BOM) $\to$ Production batch run $\to$ Actual output & scrap recording $\to$ Finished goods inventory addition $\to$ Planned vs actual variance alerts & cost-per-packet calculation.
 
 ---
 
 ## 🚀 Quick Start & Run Commands
 
-### 1. Local Run (Single Command)
+### 1. Local Python Environment (Windows, macOS, Linux)
 ```bash
-# 1. Activate environment and install dependencies
-pip install -r requirements.txt
+# 1. Clone repository
+git clone https://github.com/manikishore434-rgb/Dakshin-ERB.git
+cd Dakshin-ERB
 
-# 2. Launch application server (Auto-initializes SQLite DB and master data)
+# 2. Activate virtual environment (Windows PowerShell)
+.\venv\Scripts\Activate.ps1
+# On Linux/macOS: source venv/bin/activate
+
+# 3. Install dependencies
+pip install -r requirements.txt gunicorn
+
+# 4. Launch the application (Auto-seeds Section 5 benchmark data)
 python run.py
 ```
 Access the application at: **`http://localhost:5000`**
 
-### 2. Containerized Deployment (Docker Compose)
+### 2. Containerized Deployment (Docker & Compose)
 ```bash
-docker compose up --build
+docker compose up --build -d
 ```
+The application will launch with container health checks and volume-backed database persistence.
 
-### 3. Automated Benchmark Verification (Section 5)
+### 3. Automated Benchmark Verification (NIT Section 5 Scenario)
 ```bash
 python -m app.benchmark
 ```
-*Executes all 9 steps of the mandatory NIT Tiruchirappalli benchmark in-memory and validates 14 checkpoints.*
+*Expected: **14 / 14 checks passed (100% compliance)** with zero decimal drift.*
 
-### 4. Automated Test Suite
+### 4. Automated Enterprise Test Suite (50 Tests)
 ```bash
-python -m unittest discover -s tests -t .
+python -m unittest discover -s tests -v
 ```
-*Runs 24 comprehensive unit tests covering decimal precision, ledger balance integrity, tax calculations, and HTTP workflows.*
+*Expected: **Ran 50 tests in ~15s - OK***
 
 ---
 
-## 👥 Test Personas & User Logins
+## 🔑 Pre-Seeded Demonstration Personas
 
-All test accounts share the password: **`demo123`**
+The platform comes pre-seeded with 5 distinct role-based logins (Password for all: `demo123`):
 
-| Role | Username | Device Persona | Primary Responsibilities |
+| Role Persona | Username | Default Portal | Key Capabilities |
 |---|---|---|---|
-| **Salesman (Intra-state)** | `salesman_a` | Mobile phone | Field order entry for Retailer A (TN), offline caching, GPS visit log |
-| **Salesman (Inter-state)** | `salesman_b` | Mobile phone | Field order entry for Distributor B (Karnataka), shortage alerts |
-| **Factory Admin** | `admin` | Desktop | Order verification, stock reservation, GST invoices, dispatch, payments |
-| **Production Supervisor**| `production` | Floor tablet/PC| Raw material receipts, batch runs against BOM, output & wastage recording |
-| **Accountant / Auditor** | `accountant` | Desktop (Audit)| Sales register, GSTR-1/3B summary, stock ledger, aging, Tally Prime XML |
-| **Executive Owner** | `owner` | Any device | Cockpit KPIs: orders today, unit cost per packet, yield flags, outstanding |
+| **Executive Owner** | `owner` | `/owner/suite` | Control Tower, enterprise valuation, macro variance alerts |
+| **Factory Admin** | `admin` | `/admin/orders` | Order verification, GST tax invoices, payment logging, customer master |
+| **Production Supervisor** | `production` | `/production/runs` | BOM material issue, batch output, packaging scrap, QA inspections |
+| **Field Salesman A** | `salesman_a` | `/sales/order/new` | Mobile order entry (Retailer A), sales history, GPS visit log |
+| **Field Salesman B** | `salesman_b` | `/sales/order/new` | Mobile order entry (Distributor B), shortage detection |
+| **Accountant / Auditor** | `accountant` | `/reports` | 14 statutory reports, GSTR-1/3B summary, Tally Prime XML export |
+
+> **Evaluator Tip:** Switch between roles instantly at any time using the **"Switch Persona (Demo)"** dropdown in the sidebar or via the interactive **5-Role Persona Hub** at `/roles`.
 
 ---
 
-## 🏛️ Business Architecture & Dual-Loop Mechanics
+## 📊 Section 5 Mandatory NIT Trichy Benchmark Results
 
-DakshinERP ties the physical food factory floor to the financial ledger by harmonizing two core operational loops that intersect at **Finished Goods Stock**:
-
-```
-                       SALES LOOP (Order-to-Cash)
-   [Salesman Mobile] ──> Order Placed
-                              │
-   [Admin Verification] ──> Stock Check (Available vs Reserved)
-                              │
-   [GST Billing Engine] ──> Tax Invoice (CGST+SGST or IGST) ──> Receivables Ledger
-                              │
-   [Dispatch Desk] ────────> Physical Dispatch ──┐
-                                                 │
-                                                 ▼
-                                     ┌───────────────────────┐
-                                     │ FINISHED GOODS STOCK  │
-                                     │  (Zero-Drift Ledger)  │
-                                     └───────────────────────┘
-                                                 ▲
-                                                 │
-   [Raw Material Store] ───> Purchase Receipt ───┤
-                                                 │
-   [Batch Creation] ───────> Standard BOM Expand │
-                                                 │
-   [Floor Execution] ──────> Material Issue & Consumption
-                                                 │
-   [Output & Wastage] ─────> Good Packets Added ─┘
-                     PRODUCTION LOOP (Recipe-to-Stock)
-```
-
-1. **Sales Loop:** Field salesman places order $\to$ Admin verifies stock against available inventory $\to$ System raises GST-compliant tax invoice $\to$ Dispatch decrements finished-goods stock ledger $\to$ Payment collection tracks customer receivables and aging.
-2. **Production Loop:** Purchase inward increases raw stock $\to$ Raw materials issued against BOM recipe $\to$ Actual output & scrap recorded $\to$ Finished packets increment stock ledger $\to$ Variance and unit cost per packet computed.
+| Benchmark Checkpoint | Expected Output | Actual ERP Result | Verification Status |
+|---|---|---|---|
+| **Flour Closing Stock** | `120 kg` (100 + 60 − 40) | `120 kg` | **PASS** |
+| **Cooking Oil Closing Stock** | `19.5 L` (30 − 10.5) | `19.5 L` | **PASS** |
+| **Pouches Closing Stock** | `306` (500 − 188 − 6) | `306` | **PASS** |
+| **Finished Goods Post-Run** | `238 pkts` (50 + 188) | `238 pkts` | **PASS** |
+| **Finished Goods Post-Dispatch** | `88 pkts` (238 − 150) | `88 pkts` | **PASS** |
+| **Production Yield Variance** | `-6.00%` (188 vs 200 expected) | `-6.00%` (Flagged) | **PASS** |
+| **Oil Consumption Variance** | `+5.00%` (10.5 L vs 10.0 L BOM) | `+5.00%` (Flagged) | **PASS** |
+| **Retailer A Taxable Amount** | `₹7,500.00` (150 pkts @ ₹50) | `₹7,500.00` | **PASS** |
+| **Retailer A CGST & SGST** | `₹187.50 / ₹187.50` (Intra-state TN) | `₹187.50 / ₹187.50` | **PASS** |
+| **Retailer A Total Invoice** | `₹7,875.00` | `₹7,875.00` | **PASS** |
+| **Retailer A Outstanding Dues** | `₹3,875.00` (after ₹4,000 payment) | `₹3,875.00` | **PASS** |
+| **Distributor B Shortage** | `32 pkts short` (120 ordered vs 88 stock) | `32 pkts short` | **PASS** |
+| **Distributor B Tax Type** | `IGST ₹300.00` (Inter-state KA) | `IGST ₹300.00` | **PASS** |
+| **Distributor B Dispatch Block** | `Blocked` (Prevent negative inventory) | `Blocked` | **PASS** |
+| **Cost Per Packet with Overheads** | Material ₹4,055 + Overheads ₹1,800 | **₹31.14 / pkt (37.7% margin)** | **PASS** |
 
 ---
 
-## 📊 Section 5 Mandatory Benchmark Scenario Verification
+## 🎨 Enterprise Premium Light Purple Design System
 
-Every submission must execute the exact Section 5 benchmark scenario end-to-end. DakshinERP achieves **100% PASS** on all 14 mandatory checks:
-
-| # | Check Item | NIT Expected Value | DakshinERP System Result | Status |
-|---|---|---|---|:---:|
-| 1 | **Flour closing balance** | 120 kg (100 + 60 − 40) | **120.0 kg** | ✅ **PASS** |
-| 2 | **Oil closing balance** | 19.5 L (30 − 10.5) | **19.5 L** | ✅ **PASS** |
-| 3 | **Pouches closing balance** | 306 pcs (500 − 194) | **306 pcs** | ✅ **PASS** |
-| 4 | **Finished goods after run** | 238 pkts (50 + 188) | **238 pkts** | ✅ **PASS** |
-| 5 | **Finished goods after dispatch** | 88 pkts (238 − 150) | **88 pkts** | ✅ **PASS** |
-| 6 | **Yield variance** | 188 vs 200 expected (−6.00%) | **−6.00% (Flagged &gt; 3%)** | ✅ **PASS** |
-| 7 | **Oil consumption variance** | 10.5 L vs 10.0 L (+5.00%) | **+5.00% (Flagged &gt; 3%)** | ✅ **PASS** |
-| 8 | **Retailer A taxable value** | ₹7,500.00 | **₹7,500.00** | ✅ **PASS** |
-| 9 | **Retailer A CGST / SGST (2.5% each)**| ₹187.50 / ₹187.50 | **₹187.50 / ₹187.50** | ✅ **PASS** |
-| 10 | **Retailer A invoice total** | ₹7,875.00 | **₹7,875.00** | ✅ **PASS** |
-| 11 | **Retailer A outstanding balance** | ₹3,875.00 (7,875 − 4,000) | **₹3,875.00** | ✅ **PASS** |
-| 12 | **Distributor B shortage check** | Shortage of 32 packets | **Short by 32 pkts (Make 1 batch)** | ✅ **PASS** |
-| 13 | **Distributor B tax structure** | IGST 5.0% applies (Karnataka)| **IGST ₹300.00 on ₹6,000.00** | ✅ **PASS** |
-| 14 | **Distributor B dispatch guard** | Blocked on negative stock | **Dispatch Strictly Blocked** | ✅ **PASS** |
-
-### Cost per Packet Economics (Murukku 200g)
-* **Raw Material & Packaging Costs:**
-  * Flour: 40 kg @ weighted-average ₹43.125/kg = **₹1,725.00**
-  * Cooking Oil: 10.5 L @ ₹140.00/L = **₹1,470.00**
-  * Spice Mix: 1.2 kg @ ₹200.00/kg = **₹240.00**
-  * 200g Pouches: 194 pcs (188 good + 6 damaged) @ ₹2.50 = **₹485.00**
-  * Packaging Cartons: 9 pcs @ ₹15.00 = **₹135.00**
-  * *Material Subtotal:* **₹4,055.00**
-* **Direct Production Overheads:**
-  * Labour: **₹1,200.00**
-  * Power & Gas: **₹600.00**
-  * *Overheads Subtotal:* **₹1,800.00**
-* **Total Run Cost:** ₹4,055.00 + ₹1,800.00 = **₹5,855.00**
-* **Final Cost per Packet:** ₹5,855.00 ÷ 188 good packets = **₹31.14 per packet**
-* **Gross Margin:** Benchmark selling price ₹50.00 − ₹31.14 = **₹18.86 per packet (37.7% margin)**
+The application features a modern SaaS interface built with the exact enterprise specifications:
+- **Main Background:** `#F8F7FF`
+- **Sidebar & Card Surfaces:** `#FFFFFF`
+- **Primary Brand Purple:** `#7C3AED`
+- **Secondary Purple:** `#8B5CF6`
+- **Lavender Accents:** `#EDE5FF` & `#F3EEFF`
+- **Primary Typography:** `#27213A` (Plus Jakarta Sans)
+- **Secondary Text:** `#77718A`
+- **Borders & Dividers:** `#E9E3F5`
+- **Semantic Accents:** Success `#16A34A`, Warning `#F59E0B`, Danger `#DC2626`
+- **Responsive Layout:** Adaptive desktop sidebar, tablet layouts, and mobile bottom drawer for field salesmen.
 
 ---
 
-## 🎯 Feature Coverage Against Section 6 Tiers
+## 🏛️ Comprehensive Enterprise Modules
 
-### 1. Must Have (Core Engine) — 100% Completed
-- [x] **Role-Based Access Control:** Strict server-side decorators (`@login_required`) for 5 distinct roles.
-- [x] **Master Data Catalogs:** Items, BOM recipes, Customers, Suppliers, Customer-Specific Pricing.
-- [x] **Mobile-Friendly Field Ordering:** Fast order creation, product search, touch steppers, price list binding.
-- [x] **Admin Verification & Stock Check:** Real-time visibility into on-hand, reserved, and shortage quantities before order approval.
-- [x] **GST Tax Invoices as PDF:** ReportLab-generated tax invoice with HSN, GSTIN, place of supply, and amount in words.
-- [x] **Automated Stock Ledger Production Runs:** Starts run, issues materials, completes output, credits finished goods.
-- [x] **Planned vs Actual Consumption & Yield:** Real-time variance computation with configurable threshold alerts.
-- [x] **Stock Reconciliation & Ledger:** Full traceability where opening + receipts − issues/sales ± adjustments = closing.
-- [x] **Sales & Stock Reports:** Date-filterable with CSV, Excel (.xlsx), and PDF exports.
-
-### 2. Should Have — 100% Completed
-- [x] **Purchases & Supplier Records:** Inward receipts updating weighted-average unit valuation and batch tracking.
-- [x] **Payments, Outstanding & Ageing:** Payment collection against specific invoices with 0-30, 31-60, 60+ days aging buckets.
-- [x] **Unit Costing with Overheads:** Run-specific overhead absorption and monthly shared overhead pools.
-- [x] **GST Summary Report:** Pre-formatted reports mapping directly to GSTR-3B Table 3.1(a) and GSTR-1 Table 12 HSN tables.
-- [x] **Variance Tolerance Alerts:** Automatic dashboard flags and audit warnings whenever variance exceeds 3%.
-- [x] **Executive Owner Dashboard:** Real-time cockpit featuring KPI analytics cards and pipeline visual funnel.
-
-### 3. Stretch Goals Implemented
-- [x] **Offline Order Capture & Auto-Sync:** Service worker + `localStorage` queue with client-generated UUID idempotency.
-- [x] **Batch & Expiry Date Tracking:** Inward materials and completed finished goods carry batch numbers and expiry dates.
-- [x] **Reorder Safety Stock Alerts:** Automatic warnings when on-hand stock breaches safety thresholds.
-- [x] **Production Planning from Pending Shortages:** System computes required batches (e.g. "make 1 batch to cover shortage").
-- [x] **GPS Sales Visit Log:** Browser geolocation capture with timestamp and OpenStreetMap verification links.
-- [x] **Tally Prime Compatible XML Export:** Voucher-oriented XML generator for posted sales invoices.
-- [x] **Bilingual Interface (English / தமிழ்):** Language toggle for shared navigation and key terminology.
+1. **Role-Based ERP & Security (RBAC):** Backend-enforced access control across Owner, Admin, Salesman, Production Supervisor, and Accountant.
+2. **Sales & Field Order Management:** Fast mobile order taking, client-UUID idempotency, customer-specific pricing, and GPS visit check-ins.
+3. **GST & Invoicing Engine:** Automated Place of Supply detection (Intra-state CGST+SGST vs Inter-state IGST), FY-sequenced numbering (`INV/2026-27/0001`), ReportLab PDF invoices, and credit note workflows.
+4. **BOM & Production Engine:** Multi-ingredient recipe definitions, standard batch sizing, actual consumption vs BOM variance calculation with tolerance breach flags.
+5. **Zero-Drift Perpetual Inventory:** 4 categories (Raw materials, Packaging, WIP, Finished goods), lot numbers, FEFO dispatch, and reorder point (ROP) monitoring.
+6. **Procurement & Vendor Management:** Purchase orders, GRN material inwarding, supplier ratings, lead time tracking, and supplier outstanding payables.
+7. **Costing & Profit Analysis:** Direct raw material cost, packaging cost, labor & power overhead allocation, unit cost per packet, and customer margin rankings.
+8. **Statutory Auditor Workspace:** 14 monthly reports (Sales Register, Purchase Register, GSTR-1/3B summary, Stock Ledger, Variance Report, Aging Analysis, Tally Prime XML export).
+9. **Advanced Business Intelligence:** Real-time MRP planner, demand forecasting, profit leakage detection, cash flow simulator, and digital audit trail.
+10. **Bilingual Floor Interface:** Instant one-click language toggle between English and Tamil (தமிழ்).
 
 ---
 
-## 🛠️ Technical Stack & Architectural Justification
+## 📚 Complete Project Documentation
 
-1. **Python 3.10+ / Flask:**
-   * Delivers ultra-fast server-rendered HTML pages that load instantaneously even on 2G/3G field connections.
-   * Business logic lives in clean, decoupled service modules (`app/services/`) that can be tested headless without web framework dependencies.
-2. **SQLite with Strict Foreign Keys & ACID Transactions:**
-   * Eliminates complex external database dependencies. Stock balances are **never** stored as static mutable fields; they are strictly derived from `SUM(stock_ledger)`.
-   * Atomic transactions (`with tx(db):`) guarantee that a failed production run or invoice never leaves orphaned records.
-3. **Paisa & Milli-Unit Integer Arithmetic:**
-   * Money is stored in integer **paise** (₹1 = 100 paise) and weights/volumes in integer **milli-units** (1 kg = 1,000 milli-units).
-   * Prevents floating-point rounding drift across multi-line tax and inventory calculations.
-4. **ReportLab & OpenPyXL:**
-   * Generates vector PDF tax invoices and native binary Excel spreadsheets on the server without headless browser overhead.
+| Document | Purpose |
+|---|---|
+| [INSTALLATION.md](file:///C:/Users/Pradeepan/Downloads/Order-to-Audit-Enhanced/order-to-audit/INSTALLATION.md) | Local setup, virtual environment, and troubleshooting |
+| [API_DOCUMENTATION.md](file:///C:/Users/Pradeepan/Downloads/Order-to-Audit-Enhanced/order-to-audit/API_DOCUMENTATION.md) | REST & Web endpoints, schemas, status codes, and query params |
+| [DATABASE_SCHEMA.md](file:///C:/Users/Pradeepan/Downloads/Order-to-Audit-Enhanced/order-to-audit/DATABASE_SCHEMA.md) | Entity-relationship dictionary, integer-paisa logic, and schema |
+| [ARCHITECTURE.md](file:///C:/Users/Pradeepan/Downloads/Order-to-Audit-Enhanced/order-to-audit/ARCHITECTURE.md) | Layered modular architecture, dual-loop synchronization, sequence flows |
+| [DESIGN_NOTE.md](file:///C:/Users/Pradeepan/Downloads/Order-to-Audit-Enhanced/order-to-audit/DESIGN_NOTE.md) | Official 2-page design note required by NIT Trichy Section 8.3 |
+| [DEPLOYMENT_GUIDE.md](file:///C:/Users/Pradeepan/Downloads/Order-to-Audit-Enhanced/order-to-audit/DEPLOYMENT_GUIDE.md) | Production deployment on Render, Docker Compose, Ubuntu Nginx, backups |
+| [TESTING_REPORT.md](file:///C:/Users/Pradeepan/Downloads/Order-to-Audit-Enhanced/order-to-audit/TESTING_REPORT.md) | 50 automated tests matrix, assertions, and benchmark verification table |
+| [ASSUMPTIONS_AND_LIMITATIONS.md](file:///C:/Users/Pradeepan/Downloads/Order-to-Audit-Enhanced/order-to-audit/ASSUMPTIONS_AND_LIMITATIONS.md) | Statutory assumptions, place of supply rules, and technical roadmap |
 
 ---
 
-## 📁 Repository Directory Structure
+## 🌐 Public Repository & Publishing
 
-```
-dakshin-erp/
-├── app/
-│   ├── services/           # Core Decoupled Business Logic
-│   │   ├── stock.py        # Ledger balance, movements, valuation engine
-│   │   ├── production.py   # BOM recipe expansion, variance, costing
-│   │   ├── sales.py        # Order lifecycle, GST calculation, dispatch
-│   │   ├── reports.py      # GSTR-1/3B, stock summary, ageing, Tally XML
-│   │   └── invoice_pdf.py  # ReportLab vector PDF generator
-│   ├── views/              # Role-Based HTTP Blueprints
-│   │   ├── auth.py         # Login, logout, role switcher, bilingual toggle
-│   │   ├── sales.py        # Salesman mobile order taking & GPS check-in
-│   │   ├── admin.py        # Verification, billing, dispatch, master data
-│   │   ├── production.py   # Shop floor batch runs & receipts
-│   │   └── reports.py      # Executive dashboard, auditor reports, benchmark UI
-│   ├── static/             # Assets, CSS Design System, Service Worker
-│   │   ├── style.css       # Enterprise dark/light responsive CSS system
-│   │   ├── order.js        # Offline order taking & background sync engine
-│   │   ├── sw.js           # PWA offline cache service worker
-│   │   └── manifest.json   # PWA web app manifest
-│   ├── templates/          # Jinja2 Enterprise Layouts
-│   │   ├── base.html       # Responsive app shell with sidebar & mobile nav
-│   │   ├── benchmark.html  # Section 5 interactive compliance dashboard
-│   │   ├── login.html      # 1-Click persona login portal
-│   │   ├── admin/          # Orders, invoices, payments, master data
-│   │   ├── prod/           # Runs, recipe execution, receipts
-│   │   ├── reports/        # Executive dashboard, report views
-│   │   └── sales/          # Field order creation, orders, sales, GPS
-│   ├── benchmark.py        # Headless Section 5 benchmark test script
-│   ├── db.py               # SQLite schema with foreign keys and indexes
-│   ├── seed.py             # Section 5 starting master data seeder
-│   └── util.py             # Formatting, currency, and date helpers
-├── tests/                  # Automated Test Suite (24 unit tests)
-│   ├── test_benchmark.py   # Benchmark end-to-end unit test
-│   ├── test_rules.py       # Stock rules, tax rounding, and HTTP flows
-│   ├── test_stock.py       # Zero-drift ledger balance tests
-│   └── test_tax.py         # Intra/inter-state GST half-up rounding tests
-├── data/                   # SQLite database storage (oto.db)
-├── Dockerfile              # Production Docker container image
-├── docker-compose.yml      # Multi-container orchestration
-├── DESIGN.md               # 2-Page Architectural Design & ER Diagram Note
-├── README.md               # Complete System Documentation
-├── requirements.txt        # Python dependency manifest
-└── run.py                  # Single-command server entry point
-```
+- **GitHub Repository:** [https://github.com/manikishore434-rgb/Dakshin-ERB.git](https://github.com/manikishore434-rgb/Dakshin-ERB.git)
+- **Originating Problem Statement:** Centre for Digital Infrastructure, National Institute of Technology, Tiruchirappalli (NIT-T).

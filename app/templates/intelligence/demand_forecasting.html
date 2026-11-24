@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Demand Forecasting · SnackFlow ERP{% endblock %}
+{% block page_title %}{{ tr("Demand Forecasting") }}{% endblock %}
+{% block body %}
+<div class="demand-forecasting-container">
+
+  <div class="card" style="margin-bottom: 1.5rem; border-left: 4px solid var(--primary);">
+    <h2 style="font-size: 1.4rem; font-weight: 800; margin: 0;">Statistical Product Demand Forecasting</h2>
+    <p style="color: var(--text-secondary); font-size: 0.88rem; margin: 0.25rem 0 0;">
+      Explainable moving average and baseline growth models projecting future finished goods requirements.
+    </p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem;">
+    {% for f in forecasts %}
+    <div class="card" style="border-top: 3px solid var(--primary);">
+      <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
+        <div>
+          <h3 style="font-size: 1.15rem; font-weight: 800; margin: 0;">{{ f.name }}</h3>
+          <code style="font-size: 0.75rem;">{{ f.code }}</code>
+        </div>
+        <span class="badge info">{{ f.confidence }}</span>
+      </div>
+
+      <div style="background: var(--bg-surface-elevated); padding: 0.65rem 0.85rem; border-radius: var(--radius-sm); margin-bottom: 1rem; font-size: 0.85rem;">
+        Baseline Monthly Demand: <strong>{{ f.baseline_avg_packets }} packets</strong>
+        <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem;">
+          Computed from {{ f.historical_months }} month(s) of actual order history
+        </div>
+      </div>
+
+      <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.5rem;">
+        Projected Demand Projections:
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        {% for p in f.projections %}
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.75rem; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+          <span style="font-size: 0.85rem; font-weight: 600;">{{ p.period }}</span>
+          <strong style="color: var(--primary); font-size: 0.95rem;">{{ p.forecast_packets }} pkts</strong>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}

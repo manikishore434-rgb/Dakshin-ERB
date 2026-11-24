@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}One-Click Audit Package Generator · SnackFlow ERP{% endblock %}
+{% block page_title %}{{ tr("Audit Package") }}{% endblock %}
+{% block body %}
+<div class="audit-package-container">
+
+  <div class="card" style="margin-bottom: 1.5rem; border-left: 4px solid var(--primary);">
+    <h2 style="font-size: 1.4rem; font-weight: 800; margin: 0;">1-Click Complete Statutory Audit Package</h2>
+    <p style="color: var(--text-secondary); font-size: 0.88rem; margin: 0.25rem 0 0;">
+      Instantly compile and export all 11 core financial, production, GST, and inventory reconciliation ledgers into a single consolidated audit archive.
+    </p>
+  </div>
+
+  <div class="card" style="margin-bottom: 1.5rem;">
+    <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;">Select Audit Accounting Window</h3>
+    <form method="get" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+      <div class="form-group" style="margin: 0;">
+        <label>From Date</label>
+        <input type="date" name="from" value="{{ f }}" required>
+      </div>
+
+      <div class="form-group" style="margin: 0;">
+        <label>To Date</label>
+        <input type="date" name="to" value="{{ t }}" required>
+      </div>
+
+      <div>
+        <a href="{{ url_for('intelligence.audit_package') }}?from={{ f }}&to={{ t }}&download=zip" class="btn" style="padding: 0.65rem 1.25rem;">
+          Download Complete Audit ZIP Archive (11 Reports) 📦
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Included Reports Catalog -->
+  <div class="card">
+    <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;">Included Statutory & Operational Schedules</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0.75rem;">
+      <div style="padding: 0.75rem; background: var(--bg-surface-elevated); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+        <div style="font-weight: 700; font-size: 0.85rem;">1. Sales Register & GST Breakdown</div>
+        <div style="font-size: 0.72rem; color: var(--text-muted);">Invoice numbers, tax splits (CGST/SGST/IGST), customer HSN</div>
+      </div>
+      <div style="padding: 0.75rem; background: var(--bg-surface-elevated); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+        <div style="font-weight: 700; font-size: 0.85rem;">2. Purchase Inward Register</div>
+        <div style="font-weight: 700; font-size: 0.85rem;"></div>
+        <div style="font-size: 0.72rem; color: var(--text-muted);">Supplier bill references, rates, quantities, raw material receipts</div>
+      </div>
+      <div style="padding: 0.75rem; background: var(--bg-surface-elevated); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+        <div style="font-weight: 700; font-size: 0.85rem;">3. Perpetual Stock Summary</div>
+        <div style="font-size: 0.72rem; color: var(--text-muted);">Opening, inward, production issue, output, and closing balances</div>
+      </div>
+      <div style="padding: 0.75rem; background: var(--bg-surface-elevated); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+        <div style="font-weight: 700; font-size: 0.85rem;">4. Detailed Stock Ledger (FIFO/WAC)</div>
+        <div style="font-size: 0.72rem; color: var(--text-muted);">Every transaction row tied to source order, run, or invoice</div>
+      </div>
+      <div style="padding: 0.75rem; background: var(--bg-surface-elevated); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+        <div style="font-weight: 700; font-size: 0.85rem;">5. Production Yield & Variance Report</div>
+        <div style="font-size: 0.72rem; color: var(--text-muted);">Planned vs actual ingredients, unit cost per packet, overheads</div>
+      </div>
+      <div style="padding: 0.75rem; background: var(--bg-surface-elevated); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+        <div style="font-weight: 700; font-size: 0.85rem;">6. Customer Outstanding & Ageing</div>
+        <div style="font-size: 0.72rem; color: var(--text-muted);">Overdue 0-30, 31-60, 61-90, 90+ buckets for auditor confirmation</div>
+      </div>
+      <div style="padding: 0.75rem; background: var(--bg-surface-elevated); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+        <div style="font-weight: 700; font-size: 0.85rem;">7. Customer Collections & Receipts</div>
+        <div style="font-size: 0.72rem; color: var(--text-muted);">Bank UTR references, payment modes, invoice matching</div>
+      </div>
+      <div style="padding: 0.75rem; background: var(--bg-surface-elevated); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+        <div style="font-weight: 700; font-size: 0.85rem;">8. Immutable Audit Trail</div>
+        <div style="font-size: 0.72rem; color: var(--text-muted);">Full timestamped changelog of every approval, dispatch, and edit</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

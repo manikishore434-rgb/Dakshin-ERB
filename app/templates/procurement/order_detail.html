@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% block title %}PO {{ po.po_no }} - SNACKFLOW ERP{% endblock %}
+
+{% block body %}
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Purchase Order {{ po.po_no }}</h1>
+    <div class="page-subtitle">Supplier procurement order and goods receipt fulfillment tracking.</div>
+  </div>
+  <div class="page-actions">
+    <a href="{{ url_for('procurement.purchase_orders') }}" class="btn btn-secondary">← Back to PO List</a>
+    {% if po.status == 'draft' and g.user.role == 'admin' %}
+    <form method="post" action="{{ url_for('procurement.purchase_order_approve', poid=po.id) }}" style="display:inline;">
+      <button type="submit" class="btn btn-primary">✓ Approve Purchase Order</button>
+    </form>
+    <form method="post" action="{{ url_for('procurement.purchase_order_cancel', poid=po.id) }}" style="display:inline;">
+      <button type="submit" class="btn btn-danger" onclick="return confirm('Cancel this Purchase Order?')">✕ Cancel PO</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="grid-cards-2">
+  <!-- Left Box: PO Details & Supplier Info -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Order Information</div>
+      <span class="badge badge-{{ po.status }}">{{ po.status | upper }}</span>
+    </div>
+
+    <table class="data-table" style="border:none;">
+      <tbody>
+        <tr><td style="color:var(--text-muted); width:140px;">Supplier:</td><td style="font-weight:700;">{{ po.supplier_name }}</td></tr>
+        <tr><td style="color:var(--text-muted);">Supplier GSTIN:</td><td><code>{{ po.gstin or 'Unregistered' }}</code></td></tr>
+        <tr><td style="color:var(--text-muted);">Phone & Contact:</td><td>{{ po.phone or '-' }} ({{ po.email or '-' }})</td></tr>
+        <tr><td style="color:var(--text-muted);">Address:</td><td>{{ po.address or '-' }}</td></tr>
+        <tr><td style="color:var(--text-muted);">Order Date:</td><td>{{ po.order_date }}</td></tr>
+        <tr><td style="color:var(--text-muted);">Expected Delivery:</td><td>{{ po.expected_delivery or 'Standard' }}</td></tr>
+        <tr><td style="color:var(--text-muted);">Created By:</td><td>{{ po.creator_name or 'System' }} ({{ po.created_at[:16] }})</td></tr>
+        <tr><td style="color:var(--text-muted);">Approved By:</td><td>{{ po.approver_name or 'Pending' }}</td></tr>
+        <tr><td style="color:var(--text-muted);">Total Value:</td><td style="font-weight:800; font-size:1.1rem; color:var(--brand-primary);">Rs {{ po.total_amount_paise | money }}</td></tr>
+        <tr><td style="color:var(--text-muted);">Notes:</td><td>{{ po.notes or '-' }}</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Right Box: Goods Receipt (GRN) Form -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Receive Materials (GRN)</div>
+    </div>
+
+    {% if po.status in ('approved', 'partially_received') %}
+    <form method="post" action="{{ url_for('procurement.purchase_order_receive', poid=po.id) }}">
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label for="date">Receipt Date</label>
+          <input type="date" name="date" id="date" value="{{ today() }}" required>
+        </div>
+        <div class="form-group">
+          <label for="supplier_invoice_no">Supplier Invoice / Challan #</label>
+          <input type="text" name="supplier_invoice_no" id="supplier_invoice_no" placeholder="e.g. INV-9872" required>
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label for="batch_no">Supplier Lot / Inward Batch #</label>
+          <input type="text" name="batch_no" id="batch_no" placeholder="e.g. LOT-FLOUR-A1">
+        </div>
+        <div class="form-group">
+          <label for="expiry">Material Expiry Date</label>
+          <input type="date" name="expiry" id="expiry">
+        </div>
+      </div>
+
+      <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:1rem;">
+        Clicking below generates a Goods Receipt Note (GRN) and adds the received quantities to perpetual stock ledger.
+      </p>
+
+      <button type="submit" class="btn btn-primary" style="width:100%;">
+        📥 Receive Goods & Update Stock Ledger
+      </button>
+    </form>
+    {% else %}
+    <div style="padding:2rem 1rem; text-align:center; color:var(--text-muted); font-size:0.85rem;">
+      {% if po.status == 'draft' %}
+      This Purchase Order is in <strong>Draft</strong>. An Admin must approve it before goods can be received.
+      {% elif po.status == 'received' %}
+      ✓ All items in this Purchase Order have been fully received and verified.
+      {% elif po.status == 'cancelled' %}
+      This Purchase Order has been cancelled.
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Lines Table -->
+<div class="table-container">
+  <div class="table-toolbar">
+    <div style="font-weight:700; font-size:0.95rem; color:var(--text-main);">
+      Purchased Items & Receipt Fulfillment
+    </div>
+  </div>
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Item Code</th>
+          <th>Material Name</th>
+          <th class="num">Ordered Qty</th>
+          <th class="num">Rate</th>
+          <th class="num">Line Amount</th>
+          <th class="num">Received Qty</th>
+          <th>Fulfillment %</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ln in lines %}
+        <tr>
+          <td><code>{{ ln.item_code }}</code></td>
+          <td style="font-weight:600;">{{ ln.item_name }}</td>
+          <td class="num">{{ ln.qty_milli | qty }} {{ ln.base_unit }}</td>
+          <td class="num">Rs {{ ln.rate_paise | money }}</td>
+          <td class="num" style="font-weight:700;">Rs {{ ln.amount_paise | money }}</td>
+          <td class="num" style="font-weight:600; color:{% if ln.received_qty_milli >= ln.qty_milli %}var(--color-success){% else %}var(--color-warning){% endif %};">
+            {{ ln.received_qty_milli | qty }} {{ ln.base_unit }}
+          </td>
+          <td>
+            {% set pct = (ln.received_qty_milli * 100 // ln.qty_milli) if ln.qty_milli > 0 else 0 %}
+            <span class="badge {% if pct >= 100 %}badge-success{% elif pct > 0 %}badge-warning{% else %}badge-subtle{% endif %}">
+              {{ pct }}%
+            </span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

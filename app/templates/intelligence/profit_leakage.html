@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Profit Leakage Intelligence · SnackFlow ERP{% endblock %}
+{% block page_title %}{{ tr("Profit Leakage") }}{% endblock %}
+{% block body %}
+<div class="profit-leakage-container">
+
+  <div class="card" style="margin-bottom: 1.5rem; border-left: 5px solid #ef4444;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #ef4444;">Margin Preservation Engine</div>
+        <h2 style="font-size: 1.5rem; font-weight: 800; margin: 0.2rem 0; color: var(--text-primary);">
+          Identified Operational & Margin Leakages: <span style="color: #ef4444;">₹{{ tot_impact | money }}</span>
+        </h2>
+        <p style="color: var(--text-secondary); font-size: 0.88rem; margin: 0;">
+          Systematic discovery of unrecovered costs across ingredient variance, scrap packaging, custom price erosion, and credit capital drag.
+        </p>
+      </div>
+
+      <div>
+        <a href="{{ url_for('intelligence.profitability') }}" class="btn secondary btn-sm">Product Profitability →</a>
+      </div>
+    </div>
+  </div>
+
+  {% if leakages %}
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem;">
+    {% for l in leakages %}
+    <div class="card" style="border-top: 3px solid {% if l.severity == 'High' %}#ef4444{% elif l.severity == 'Medium' %}#f59e0b{% else %}#3b82f6{% endif %};">
+      <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+        <div>
+          <span class="badge {% if l.severity == 'High' %}rejected{% elif l.severity == 'Medium' %}submitted{% else %}invoiced{% endif %}">
+            {{ l.severity | upper }}
+          </span>
+          <h3 style="font-size: 1.05rem; font-weight: 700; margin: 0.4rem 0 0;">{{ l.category }}</h3>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600;">EST. FINANCIAL IMPACT</div>
+          <div style="font-size: 1.3rem; font-weight: 800; color: #ef4444;">₹{{ l.impact_paise | money }}</div>
+        </div>
+      </div>
+
+      <div style="background: var(--bg-surface-elevated); padding: 0.65rem 0.85rem; border-radius: var(--radius-sm); margin: 0.75rem 0; font-size: 0.82rem; color: var(--text-secondary);">
+        <strong>Audit Evidence:</strong> {{ l.evidence }}
+      </div>
+
+      <div style="border-top: 1px solid var(--border-color); padding-top: 0.6rem; font-size: 0.8rem; color: var(--text-primary);">
+        <strong style="color: var(--primary);">Suggested Containment Action:</strong><br>
+        {{ l.recommended_action }}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card" style="text-align: center; padding: 3rem 1rem;">
+    <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary);">Zero Active Leakages Detected</h3>
+    <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem;">
+      No excess variances or abnormal customer discounts found in current ledger data.
+    </p>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

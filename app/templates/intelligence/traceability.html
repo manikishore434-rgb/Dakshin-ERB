@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% block title %}Transaction Traceability Explorer · SnackFlow ERP{% endblock %}
+{% block page_title %}{{ tr("Traceability") }}{% endblock %}
+{% block body %}
+<div class="traceability-container">
+
+  <div class="card" style="margin-bottom: 1.5rem; border-left: 4px solid var(--primary);">
+    <h2 style="font-size: 1.4rem; font-weight: 800; margin: 0;">End-to-End Transaction Traceability Explorer</h2>
+    <p style="color: var(--text-secondary); font-size: 0.88rem; margin: 0.25rem 0 0;">
+      Lineage visualization linking customer demand, production batch runs, raw material issues, GST invoices, and immutable audit entries.
+    </p>
+
+    <!-- Search Bar -->
+    <form method="get" style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+      <input type="search" name="q" value="{{ term }}" placeholder="Enter Order No, Invoice No, Batch No, Customer Name..." required
+             style="flex: 1; padding: 0.6rem 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-surface-elevated); color: var(--text-primary); font-size: 0.9rem;">
+      <button type="submit" class="btn">Explore Trace Lineage 🔍</button>
+    </form>
+  </div>
+
+  {% if r %}
+  <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+
+    <!-- Matched Orders -->
+    {% if r.orders %}
+    <div class="card">
+      <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--primary); margin-bottom: 0.75rem;">1. Customer Orders Linked</h3>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr><th>Order No</th><th>Customer</th><th>Status</th><th>Created</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+            {% for o in r.orders %}
+            <tr>
+              <td style="font-weight: 700;"><a href="{{ url_for('admin.order_detail', oid=o.id) }}">{{ o.order_no }}</a></td>
+              <td>{{ o.customer_name }}</td>
+              <td><span class="badge {{ o.status }}">{{ o.status | upper }}</span></td>
+              <td>{{ o.created_at[:16] }}</td>
+              <td><a href="{{ url_for('admin.order_detail', oid=o.id) }}" class="btn secondary btn-sm">View Order →</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Matched Production Runs -->
+    {% if r.production_runs %}
+    <div class="card">
+      <h3 style="font-size: 1.05rem; font-weight: 700; color: #3b82f6; margin-bottom: 0.75rem;">2. Production Batch Execution</h3>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr><th>Run No</th><th>Batch No</th><th>Product</th><th>Output</th><th>Status</th><th>Batch Card</th></tr>
+          </thead>
+          <tbody>
+            {% for run in r.production_runs %}
+            <tr>
+              <td style="font-weight: 700;"><a href="{{ url_for('production.run_detail', rid=run.id) }}">{{ run.run_no }}</a></td>
+              <td><code>{{ run.batch_no }}</code></td>
+              <td>{{ run.product_name }}</td>
+              <td>{{ run.actual_milli | qty }} pkts</td>
+              <td><span class="badge {{ run.status }}">{{ run.status | upper }}</span></td>
+              <td><a href="{{ url_for('intelligence.batch_card', rid=run.id) }}" class="btn secondary btn-sm">Digital Card 🏷️</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Matched Invoices -->
+    {% if r.invoices %}
+    <div class="card">
+      <h3 style="font-size: 1.05rem; font-weight: 700; color: #10b981; margin-bottom: 0.75rem;">3. GST Tax Invoices & Dispatches</h3>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr><th>Invoice No</th><th>Date</th><th>Customer</th><th>Total (₹)</th><th>Dispatched On</th><th>PDF</th></tr>
+          </thead>
+          <tbody>
+            {% for inv in r.invoices %}
+            <tr>
+              <td style="font-weight: 700;">{{ inv.invoice_no }}</td>
+              <td>{{ inv.date }}</td>
+              <td>{{ inv.customer_name }}</td>
+              <td><strong>₹{{ inv.total_paise | money }}</strong></td>
+              <td>{{ inv.dispatched_on or 'Pending Dispatch' }}</td>
+              <td><a href="{{ url_for('admin.invoice_pdf_view', iid=inv.id) }}" class="btn secondary btn-sm">PDF 📄</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Immutable Audit Entries -->
+    {% if r.audit_entries %}
+    <div class="card">
+      <h3 style="font-size: 1.05rem; font-weight: 700; color: #64748b; margin-bottom: 0.75rem;">4. Immutable Audit Log Trail</h3>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr><th>Timestamp</th><th>User</th><th>Entity</th><th>Action</th><th>Details</th></tr>
+          </thead>
+          <tbody>
+            {% for a in r.audit_entries %}
+            <tr>
+              <td style="font-family: var(--font-mono); font-size: 0.78rem;">{{ a.ts }}</td>
+              <td><strong>{{ a.username }}</strong></td>
+              <td><code>{{ a.entity }} #{{ a.entity_id or '-' }}</code></td>
+              <td><span class="badge secondary">{{ a.action }}</span></td>
+              <td style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-secondary);">{{ a.detail or '-' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+  {% elif term %}
+  <div class="card" style="text-align: center; padding: 3rem 1rem;">
+    <p style="color: var(--text-muted); font-size: 0.95rem;">No transaction records matched identifier "{{ term }}".</p>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

@@ -5,66 +5,85 @@
    ========================================================================== */
 
 :root {
-  /* Color Palette - Light Mode */
-  --bg-app: #f8fafc;
-  --bg-surface: #ffffff;
-  --bg-surface-elevated: #f1f5f9;
-  --bg-surface-subtle: #f8fafc;
-  --border-color: #e2e8f0;
-  --border-focus: #d97706;
+  /* ==========================================================================
+     Enterprise Premium Light Purple & Lavender Design System
+     Exact Specification Palette:
+     - Main Background: #F8F7FF
+     - Sidebar:         #FFFFFF
+     - Cards:           #FFFFFF
+     - Primary Purple:  #7C3AED
+     - Secondary Purple:#8B5CF6
+     - Lavender:        #EDE5FF
+     - Soft Lavender:   #F3EEFF
+     - Primary Text:    #27213A
+     - Secondary Text:  #77718A
+     - Borders:         #E9E3F5
+     - Success:         #16A34A
+     - Warning:         #F59E0B
+     - Danger:          #DC2626
+     ========================================================================== */
+  --bg-app: #F8F7FF;
+  --bg-surface: #FFFFFF;
+  --bg-surface-elevated: #FFFFFF;
+  --bg-surface-subtle: #F3EEFF;
+  --border-color: #E9E3F5;
+  --border-focus: #7C3AED;
 
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #64748b;
-  --text-inverse: #ffffff;
+  --text-primary: #27213A;
+  --text-secondary: #77718A;
+  --text-muted: #9D96B0;
+  --text-inverse: #FFFFFF;
 
-  /* Brand Accents - Artisanal South Indian Warm Palette */
-  --primary: #d97706;
-  --primary-hover: #b45309;
-  --primary-active: #92400e;
-  --primary-subtle: #fef3c7;
-  --primary-text: #92400e;
+  /* Brand Accents - Premium SaaS Purple */
+  --primary: #7C3AED;
+  --primary-hover: #6D28D9;
+  --primary-active: #5B21B6;
+  --primary-subtle: #EDE5FF;
+  --primary-text: #7C3AED;
 
-  --secondary: #0284c7;
-  --secondary-hover: #0369a1;
-  --secondary-subtle: #e0f2fe;
-  --secondary-text: #0369a1;
+  --secondary: #8B5CF6;
+  --secondary-hover: #7C3AED;
+  --secondary-subtle: #F3EEFF;
+  --secondary-text: #8B5CF6;
 
-  --accent-teal: #0d9488;
-  --accent-purple: #7c3aed;
+  --lavender: #EDE5FF;
+  --lavender-soft: #F3EEFF;
+
+  --accent-teal: #0D9488;
+  --accent-purple: #7C3AED;
 
   /* Status Colors */
-  --status-success-bg: #dcfce7;
-  --status-success-text: #166534;
-  --status-success-border: #bbf7d0;
+  --status-success-bg: #DCFCE7;
+  --status-success-text: #16A34A;
+  --status-success-border: #BBF7D0;
 
-  --status-warning-bg: #fef3c7;
-  --status-warning-text: #92400e;
-  --status-warning-border: #fde68a;
+  --status-warning-bg: #FEF3C7;
+  --status-warning-text: #F59E0B;
+  --status-warning-border: #FDE68A;
 
-  --status-danger-bg: #fee2e2;
-  --status-danger-text: #991b1b;
-  --status-danger-border: #fecaca;
+  --status-danger-bg: #FEE2E2;
+  --status-danger-text: #DC2626;
+  --status-danger-border: #FECACA;
 
-  --status-info-bg: #e0f2fe;
-  --status-info-text: #075985;
-  --status-info-border: #bae6fd;
+  --status-info-bg: #EDE5FF;
+  --status-info-text: #7C3AED;
+  --status-info-border: #E9E3F5;
 
-  /* Sidebar Design */
-  --sidebar-bg: #0f172a;
-  --sidebar-text: #94a3b8;
-  --sidebar-text-bright: #f8fafc;
-  --sidebar-border: #1e293b;
-  --sidebar-hover: #1e293b;
-  --sidebar-active-bg: rgba(217, 119, 6, 0.15);
-  --sidebar-active-text: #fbbf24;
+  /* Sidebar Design - Clean White & Lavender */
+  --sidebar-bg: #FFFFFF;
+  --sidebar-text: #77718A;
+  --sidebar-text-bright: #27213A;
+  --sidebar-border: #E9E3F5;
+  --sidebar-hover: #F3EEFF;
+  --sidebar-active-bg: #EDE5FF;
+  --sidebar-active-text: #7C3AED;
 
   /* Typography & Shadows */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, Monaco, monospace;
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08);
+  --shadow-sm: 0 1px 3px 0 rgb(124 58 237 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(124 58 237 / 0.06), 0 2px 4px -2px rgb(124 58 237 / 0.06);
+  --shadow-lg: 0 10px 15px -3px rgb(124 58 237 / 0.08), 0 4px 6px -4px rgb(124 58 237 / 0.08);
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 16px;
@@ -1184,5 +1203,66 @@ input:focus, select:focus, textarea:focus {
 
   .topbar-right .benchmark-badge-btn span.label-text {
     display: none;
+  }
+}
+
+/* ==========================================================================
+   SnackFlow ERP Additional Enterprise Intelligence Styles & Print Support
+   ========================================================================== */
+.live-pill {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  font-weight: 700;
+  animation: pulse-live 1.8s infinite;
+}
+
+@keyframes pulse-live {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(0.96); }
+}
+
+.badge.raw {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.badge.packaging {
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+.badge.finished {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.workflow-step-pill {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.workflow-step-pill:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary) !important;
+}
+
+@media print {
+  .app-sidebar, .app-topbar, .sidebar-footer, .no-print, .mobile-bottom-nav {
+    display: none !important;
+  }
+  .app-main {
+    margin: 0 !important;
+    width: 100% !important;
+    padding: 0 !important;
+  }
+  .content-container {
+    padding: 0 !important;
+  }
+  .card {
+    box-shadow: none !important;
+    border: 1px solid #000 !important;
   }
 }

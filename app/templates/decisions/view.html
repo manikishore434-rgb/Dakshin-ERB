@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block title %}Decision Support Center - SNACKFLOW ERP{% endblock %}
+
+{% block body %}
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Operational Decision Support Engine</h1>
+    <div class="page-subtitle">Rule-based, transparent recommendations generated directly from live manufacturing and financial records.</div>
+  </div>
+</div>
+
+<!-- Priority KPI Summary -->
+<div class="grid-cards-4">
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <span class="kpi-label">Active Decisions</span>
+      <div class="kpi-icon-box kpi-icon-purple">💡</div>
+    </div>
+    <div class="kpi-val">{{ recommendations | length }}</div>
+    <div class="kpi-sub">Total actionable alerts</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <span class="kpi-label">Critical Actions</span>
+      <div class="kpi-icon-box kpi-icon-red">🔥</div>
+    </div>
+    <div class="kpi-val" style="color:var(--color-danger);">{{ counts.critical }}</div>
+    <div class="kpi-sub">Requires immediate resolution</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <span class="kpi-label">High Priority</span>
+      <div class="kpi-icon-box kpi-icon-amber">⚡</div>
+    </div>
+    <div class="kpi-val" style="color:var(--color-warning);">{{ counts.high }}</div>
+    <div class="kpi-sub">Production & efficiency alerts</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <span class="kpi-label">Logic Basis</span>
+      <div class="kpi-icon-box kpi-icon-blue">⚙️</div>
+    </div>
+    <div class="kpi-val" style="font-size:1.1rem; padding-top:0.4rem;">Deterministic</div>
+    <div class="kpi-sub">Auditable business rules</div>
+  </div>
+</div>
+
+<!-- Recommendations List -->
+<div style="display:flex; flex-direction:column; gap:1.25rem;">
+  {% if recommendations %}
+    {% for rec in recommendations %}
+    <div class="card" style="border-left:4px solid {% if rec.priority == 'critical' %}var(--color-danger){% elif rec.priority == 'high' %}var(--color-warning){% else %}var(--accent-blue){% endif %}; margin-bottom:0;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem; flex-wrap:wrap; gap:0.5rem;">
+        <div>
+          <span class="badge badge-{{ rec.priority }}" style="margin-right:0.5rem;">{{ rec.priority | upper }}</span>
+          <span class="badge badge-subtle">{{ rec.category }}</span>
+          <h2 style="font-size:1.15rem; font-weight:700; color:var(--text-main); margin-top:0.4rem;">
+            {{ rec.title }}
+          </h2>
+        </div>
+        <a href="{{ rec.action_url }}" class="btn btn-primary btn-sm">
+          {{ rec.action_label }} →
+        </a>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1rem; font-size:0.86rem; background:var(--bg-subtle); padding:1rem; border-radius:var(--radius-sm); margin-bottom:0.75rem;">
+        <div>
+          <div style="font-weight:700; color:var(--text-secondary); margin-bottom:2px;">⚠️ Identified Problem</div>
+          <div style="color:var(--text-main);">{{ rec.problem }}</div>
+        </div>
+        <div>
+          <div style="font-weight:700; color:var(--text-secondary); margin-bottom:2px;">📊 Concrete DB Evidence</div>
+          <div style="color:var(--text-main);">{{ rec.evidence }}</div>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem; font-size:0.85rem;">
+        <div>
+          <span style="font-weight:700; color:var(--brand-primary);">Recommended Step:</span>
+          <span>{{ rec.suggested_action }}</span>
+        </div>
+        <div style="font-weight:600; color:var(--color-success); background:var(--color-success-light); padding:0.25rem 0.65rem; border-radius:var(--radius-sm);">
+          Impact: {{ rec.impact }}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="card" style="text-align:center; padding:3rem 1.5rem;">
+      <div style="font-size:2rem; margin-bottom:0.5rem;">✨</div>
+      <h3 style="font-size:1.1rem; font-weight:700;">No pending decision recommendations</h3>
+      <p style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;">
+        All operations are running within optimal parameters.
+      </p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

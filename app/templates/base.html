@@ -3,16 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <title>{% block title %}DakshinERP · Smart Food Manufacturing OS{% endblock %}</title>
+  <title>{% block title %}SnackFlow ERP · Smart Manufacturing, Sales, Inventory & Audit Intelligence{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-  <meta name="theme-color" content="#d97706">
+  <meta name="theme-color" content="#7C3AED">
   <script>
-    // Immediate theme initialization to prevent flash
-    const savedTheme = localStorage.getItem('dakshin_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    const savedTheme = localStorage.getItem('snackflow_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
     document.documentElement.setAttribute('data-theme', savedTheme);
   </script>
 </head>
@@ -22,25 +21,24 @@
   <!-- Enterprise Sidebar Navigation -->
   <aside class="app-sidebar" id="sidebar">
     <div class="sidebar-header">
-      <a class="brand-container" href="/">
-        <!-- Custom Artisanal Food ERP SVG Emblem -->
+      <a class="brand-container" href="{{ url_for('intelligence.control_tower') if g.user.role in ('admin','owner') else url_for('auth.home') }}">
+        <!-- Custom SnackFlow Food ERP SVG Emblem -->
         <svg class="brand-logo-svg" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
           <rect width="48" height="48" rx="12" fill="url(#brandGrad)" />
-          <!-- Hexagon Gear & Wheat / Grain Motif -->
           <path d="M24 10L35 16.5V29.5L24 36L13 29.5V16.5L24 10Z" stroke="#ffffff" stroke-width="2.5" stroke-linejoin="round" />
           <path d="M24 16V30M24 18C21 16 18 19 18 21C21 23 24 21 24 21M24 22C27 20 30 23 30 25C27 27 24 25 24 25" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-          <circle cx="24" cy="31" r="2" fill="#fbbf24" />
+          <circle cx="24" cy="31" r="2" fill="#EDE5FF" />
           <defs>
             <linearGradient id="brandGrad" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-              <stop stop-color="#b45309" />
-              <stop offset="0.6" stop-color="#d97706" />
-              <stop offset="1" stop-color="#059669" />
+              <stop stop-color="#5B21B6" />
+              <stop offset="0.5" stop-color="#7C3AED" />
+              <stop offset="1" stop-color="#8B5CF6" />
             </linearGradient>
           </defs>
         </svg>
         <div class="brand-text">
-          <span class="brand-name">Dakshin<span>ERP</span></span>
-          <span class="brand-sub">NIT Trichy · CDI</span>
+          <span class="brand-name">SnackFlow<span>ERP</span></span>
+          <span class="brand-sub">From Order to Audit</span>
         </div>
       </a>
     </div>
@@ -52,7 +50,7 @@
       </div>
       <div class="user-meta">
         <span class="user-name">{{ g.user.full_name }}</span>
-        <span class="user-role-badge">{{ g.user.role }}</span>
+        <span class="user-role-badge">{{ g.user.role | upper }}</span>
       </div>
     </div>
 
@@ -60,10 +58,22 @@
     <nav class="sidebar-nav">
       {% set user_role = g.user.role %}
 
-      <!-- Core Modules -->
-      <div class="nav-section-title">Core Operations</div>
+      <!-- Overview & Control Tower -->
+      <div class="nav-section-title">Command & Control</div>
+
+      {% if user_role in ('admin', 'owner', 'production', 'accountant') %}
+      <a class="nav-link {% if request.path == url_for('intelligence.control_tower') %}active{% endif %}" href="{{ url_for('intelligence.control_tower') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        <span>{{ tr("Control Tower") }}</span>
+        <span class="nav-pill-count live-pill">LIVE</span>
+      </a>
+      {% endif %}
 
       {% if user_role in ('admin', 'owner') %}
+      <a class="nav-link {% if request.path == url_for('owner.suite') %}active{% endif %}" href="{{ url_for('owner.suite') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Executive Suite</span>
+      </a>
       <a class="nav-link {% if request.path == url_for('reports.dashboard') %}active{% endif %}" href="{{ url_for('reports.dashboard') }}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
         <span>{{ tr("Dashboard") }}</span>
@@ -72,13 +82,33 @@
 
       <a class="nav-link {% if request.path == url_for('reports.benchmark_view') %}active{% endif %}" href="{{ url_for('reports.benchmark_view') }}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        <span>Benchmark Matrix</span>
-        <span class="nav-pill-count" style="background:rgba(16,185,129,0.2); color:#34d399;">14/14</span>
+        <span>NIT Benchmark</span>
+        <span class="nav-pill-count" style="background:rgba(16,185,129,0.2); color:#16A34A;">14/14 PASS</span>
+      </a>
+
+      <a class="nav-link {% if request.path == url_for('auth.roles') %}active{% endif %}" href="{{ url_for('auth.roles') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>5-Role Persona Hub</span>
+      </a>
+
+      <a class="nav-link {% if request.path == url_for('intelligence.ai_assistant_view') %}active{% endif %}" href="{{ url_for('intelligence.ai_assistant_view') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 0 1 10 10c0 5.523-4.477 10-10 10S2 17.523 2 12A10 10 0 0 1 12 2z"/><path d="M12 16v-4M12 8h.01"/></svg>
+        <span>{{ tr("AI Assistant") }}</span>
+        <span class="nav-pill-count" style="background:rgba(124,58,237,0.15); color:#7C3AED;">AI</span>
+      </a>
+
+      <a class="nav-link {% if request.path == url_for('alerts.view') %}active{% endif %}" href="{{ url_for('alerts.view') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span>{{ tr("Alert Center") }}</span>
+        {% if g.alert_count and g.alert_count > 0 %}
+        <span class="nav-pill-count" style="background:#FEE2E2; color:#DC2626;">{{ g.alert_count }}</span>
+        {% endif %}
       </a>
 
       <!-- Sales Module -->
+      {% if user_role in ('salesman', 'admin', 'owner') %}
+      <div class="nav-section-title">Field Sales & CRM</div>
       {% if user_role == 'salesman' %}
-      <div class="nav-section-title">Field Sales</div>
       <a class="nav-link {% if request.path == url_for('sales.order_new') %}active{% endif %}" href="{{ url_for('sales.order_new') }}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
         <span>{{ tr("New order") }}</span>
@@ -96,9 +126,22 @@
         <span>{{ tr("Sales visit GPS log") }}</span>
       </a>
       {% endif %}
+      <a class="nav-link {% if request.path == url_for('intelligence.lost_sales') %}active{% endif %}" href="{{ url_for('intelligence.lost_sales') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        <span>{{ tr("Lost Sales") }}</span>
+      </a>
+      <a class="nav-link {% if request.path == url_for('intelligence.sales_performance') %}active{% endif %}" href="{{ url_for('intelligence.sales_performance') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        <span>{{ tr("Sales Performance") }}</span>
+      </a>
+      <a class="nav-link {% if request.path == url_for('intelligence.customer_intelligence') %}active{% endif %}" href="{{ url_for('intelligence.customer_intelligence') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>{{ tr("Customer Intelligence") }}</span>
+      </a>
+      {% endif %}
 
-      <!-- Admin Desk -->
-      {% if user_role == 'admin' %}
+      <!-- Order-to-Cash Desk -->
+      {% if user_role in ('admin', 'owner') %}
       <div class="nav-section-title">Order-to-Cash Desk</div>
       <a class="nav-link {% if request.path == url_for('admin.orders') %}active{% endif %}" href="{{ url_for('admin.orders') }}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
@@ -112,6 +155,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
         <span>{{ tr("Payments") }} & Dues</span>
       </a>
+      <a class="nav-link {% if request.path == url_for('intelligence.credit_collection') %}active{% endif %}" href="{{ url_for('intelligence.credit_collection') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        <span>{{ tr("Credit & Collection") }}</span>
+      </a>
       <a class="nav-link {% if request.path == url_for('admin.masters') %}active{% endif %}" href="{{ url_for('admin.masters') }}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
         <span>{{ tr("Masters") }} Data</span>
@@ -119,28 +166,155 @@
       {% endif %}
 
       <!-- Production Floor -->
-      {% if user_role in ('production', 'admin') %}
+      {% if user_role in ('production', 'admin', 'owner') %}
       <div class="nav-section-title">Production & Floor</div>
+      <a class="nav-link {% if request.path == url_for('intelligence.production_planner') %}active{% endif %}" href="{{ url_for('intelligence.production_planner') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>{{ tr("Production Planner") }}</span>
+      </a>
       <a class="nav-link {% if request.path == url_for('production.runs') %}active{% endif %}" href="{{ url_for('production.runs') }}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 20h20M5 20V8l7 4V4l7 4v12"/></svg>
         <span>Batch Runs (BOM)</span>
       </a>
-      <a class="nav-link {% if request.path == url_for('production.run_new') %}active{% endif %}" href="{{ url_for('production.run_new') }}">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-        <span>Start New Run</span>
-      </a>
       <a class="nav-link {% if request.path == url_for('production.purchases') %}active{% endif %}" href="{{ url_for('production.purchases') }}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-        <span>Material Receipts</span>
+        <span>Material Inward</span>
+      </a>
+      <a class="nav-link {% if request.path == url_for('intelligence.quality_management') %}active{% endif %}" href="{{ url_for('intelligence.quality_management') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <span>{{ tr("Quality") }} (QA)</span>
+      </a>
+      <a class="nav-link {% if request.path == url_for('intelligence.bottlenecks_capacity') %}active{% endif %}" href="{{ url_for('intelligence.bottlenecks_capacity') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <span>{{ tr("Bottlenecks & Capacity") }}</span>
+      </a>
+      <a class="nav-link {% if request.path == url_for('intelligence.recall_management') %}active{% endif %}" href="{{ url_for('intelligence.recall_management') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span>{{ tr("Batch Recall") }}</span>
       </a>
       {% endif %}
 
-      <!-- Audit & Compliance Reports -->
-      {% if user_role != 'salesman' %}
-      <div class="nav-section-title">Auditor & Accounts</div>
+      <!-- Procurement & Supplier Management -->
+      {% if user_role in ('admin', 'owner', 'production') %}
+      <div class="nav-section-title">Procurement & Vendors</div>
+      <a class="nav-link {% if request.path == url_for('procurement.purchase_orders') %}active{% endif %}" href="{{ url_for('procurement.purchase_orders') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span>Purchase Orders</span>
+      </a>
+      <a class="nav-link {% if request.path == url_for('procurement.suppliers') %}active{% endif %}" href="{{ url_for('procurement.suppliers') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Supplier Master</span>
+      </a>
+      <a class="nav-link {% if request.path == url_for('mrp.view') %}active{% endif %}" href="{{ url_for('mrp.view') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        <span>MRP Demand Plan</span>
+      </a>
+      <a class="nav-link {% if request.path == url_for('quality.inspections') %}active{% endif %}" href="{{ url_for('quality.inspections') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <span>QA Inspections</span>
+      </a>
+      {% endif %}
+
+      <!-- Inventory & Intelligence -->
+      {% if user_role in ('production', 'admin', 'owner', 'accountant') %}
+      <div class="nav-section-title">Inventory & Intelligence</div>
+      <a class="nav-link {% if request.path == url_for('intelligence.inventory_health') %}active{% endif %}" href="{{ url_for('intelligence.inventory_health') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        <span>{{ tr("Inventory Health") }}</span>
+      </a>
+      <a class="nav-link {% if request.path == url_for('intelligence.reorder_predictor') %}active{% endif %}" href="{{ url_for('intelligence.reorder_predictor') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v1"/><line x1="18" y1="8" x2="23" y2="13"/><line x1="23" y1="13" x2="18" y2="18"/><line x1="11" y1="13" x2="23" y2="13"/></svg>
+        <span>{{ tr("Reorder Predictor") }}</span>
+      </a>
+      <a class="nav-link {% if request.path == url_for('intelligence.batch_management') %}active{% endif %}" href="{{ url_for('intelligence.batch_management') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        <span>{{ tr("Batch & Expiry") }} (FEFO)</span>
+      </a>
+      <a class="nav-link {% if request.path == url_for('intelligence.material_wastage') %}active{% endif %}" href="{{ url_for('intelligence.material_wastage') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        <span>{{ tr("Material Wastage") }}</span>
+      </a>
+      <a class="nav-link {% if request.path == url_for('intelligence.root_cause_analysis') %}active{% endif %}" href="{{ url_for('intelligence.root_cause_analysis') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span>{{ tr("Root Cause Analysis") }}</span>
+      </a>
+      <a class="nav-link {% if request.path == url_for('intelligence.supplier_intelligence') %}active{% endif %}" href="{{ url_for('intelligence.supplier_intelligence') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        <span>{{ tr("Supplier Intelligence") }}</span>
+      </a>
+      {% endif %}
+
+      <!-- Analytics & Simulators -->
+      {% if user_role in ('admin', 'owner', 'accountant') %}
+      <div class="nav-section-title">Analytics & Simulators</div>
+      <a class="nav-link {% if request.path == url_for('intelligence.profitability') %}active{% endif %}" href="{{ url_for('intelligence.profitability') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <span>{{ tr("Profitability") }} & COGS</span>
+      </a>
+      <a class="nav-link {% if request.path == url_for('intelligence.profit_leakage') %}active{% endif %}" href="{{ url_for('intelligence.profit_leakage') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+        <span>{{ tr("Profit Leakage") }}</span>
+      </a>
+      <a class="nav-link {% if request.path == url_for('intelligence.cost_fluctuations') %}active{% endif %}" href="{{ url_for('intelligence.cost_fluctuations') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg>
+        <span>Cost Fluctuations</span>
+      </a>
+      <a class="nav-link {% if request.path == url_for('intelligence.demand_forecasting') %}active{% endif %}" href="{{ url_for('intelligence.demand_forecasting') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span>{{ tr("Demand Forecasting") }}</span>
+      </a>
+      <a class="nav-link {% if request.path == url_for('intelligence.cash_flow_forecasting') %}active{% endif %}" href="{{ url_for('intelligence.cash_flow_forecasting') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        <span>{{ tr("Cash Flow") }}</span>
+      </a>
+      <a class="nav-link {% if request.path == url_for('intelligence.simulator_what_if') %}active{% endif %}" href="{{ url_for('intelligence.simulator_what_if') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>What-If Simulator</span>
+      </a>
+      <a class="nav-link {% if request.path == url_for('intelligence.simulator_continuity') %}active{% endif %}" href="{{ url_for('intelligence.simulator_continuity') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>Continuity Simulator</span>
+      </a>
+      <a class="nav-link {% if request.path == url_for('intelligence.simulator_factory') %}active{% endif %}" href="{{ url_for('intelligence.simulator_factory') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>
+        <span>Digital Factory</span>
+      </a>
+      {% endif %}
+
+      <!-- Audit & Compliance -->
+      {% if user_role in ('accountant', 'admin', 'owner') %}
+      <div class="nav-section-title">Audit & Compliance</div>
+      <a class="nav-link {% if request.path == url_for('intelligence.audit_readiness') %}active{% endif %}" href="{{ url_for('intelligence.audit_readiness') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <span>{{ tr("Audit Readiness") }}</span>
+      </a>
+      <a class="nav-link {% if request.path == url_for('intelligence.traceability') %}active{% endif %}" href="{{ url_for('intelligence.traceability') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        <span>{{ tr("Traceability") }} Lineage</span>
+      </a>
+      <a class="nav-link {% if request.path == url_for('intelligence.document_vault') %}active{% endif %}" href="{{ url_for('intelligence.document_vault') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        <span>{{ tr("Document Vault") }}</span>
+      </a>
+      <a class="nav-link {% if request.path == url_for('intelligence.audit_package') %}active{% endif %}" href="{{ url_for('intelligence.audit_package') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        <span>{{ tr("Audit Package") }} (1-Click)</span>
+      </a>
+      <a class="nav-link {% if request.path == url_for('intelligence.daily_closing') %}active{% endif %}" href="{{ url_for('intelligence.daily_closing') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>{{ tr("Daily Closing") }}</span>
+      </a>
+      <a class="nav-link {% if request.path == url_for('profitability.view') %}active{% endif %}" href="{{ url_for('profitability.view') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <span>Unit Margins & COGS</span>
+      </a>
+      <a class="nav-link {% if request.path == url_for('decisions.view') %}active{% endif %}" href="{{ url_for('decisions.view') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>Scenario Decisions</span>
+      </a>
       <a class="nav-link {% if request.path == url_for('reports.index') %}active{% endif %}" href="{{ url_for('reports.index') }}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-        <span>Audit Reports Hub</span>
+        <span>Reports Hub (11 Rep.)</span>
       </a>
       <a class="nav-link" href="{{ url_for('reports.view', slug='gst-summary') }}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -197,11 +371,31 @@
         <button type="button" class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
         <div class="page-title-group">
           <h1 class="page-title">{% block page_title %}{{ tr("Dashboard") }}{% endblock %}</h1>
-          <span class="page-subtitle">Centre for Digital Infrastructure, NIT Tiruchirappalli</span>
+          <span class="page-subtitle">SnackFlow ERP · NIT Trichy Benchmark Platform</span>
         </div>
       </div>
 
-      <div class="topbar-right">
+      <!-- Topbar Global Search & Utility Actions -->
+      <div class="topbar-center" style="flex:1; max-width:420px; margin:0 1rem;">
+        <form action="{{ url_for('intelligence.traceability') }}" method="get" class="global-search-form" style="display:flex; align-items:center; position:relative; width:100%;">
+          <input type="search" name="q" placeholder="Global search: Order #, Batch #, Invoice #..." value="{{ request.args.get('q','') }}"
+                 style="width:100%; padding:0.45rem 2.2rem 0.45rem 0.85rem; border-radius:9999px; border:1px solid var(--border-color); background:var(--bg-surface-elevated); color:var(--text-primary); font-size:0.82rem; outline:none;">
+          <button type="submit" style="position:absolute; right:0.5rem; background:none; border:none; color:var(--text-muted); cursor:pointer;">🔍</button>
+        </form>
+      </div>
+
+      <div class="topbar-right" style="display:flex; align-items:center; gap:0.5rem;">
+        <!-- AI Assistant Quick Launch -->
+        <a href="{{ url_for('intelligence.ai_assistant_view') }}" class="btn secondary btn-sm" style="display:flex; align-items:center; gap:0.35rem; font-size:0.78rem;" title="Ask AI Business Assistant">
+          <span>✨</span>
+          <span class="hide-mobile">AI Assistant</span>
+        </a>
+
+        <!-- Alert Center Icon -->
+        <a href="{{ url_for('intelligence.alerts_center') }}" class="btn secondary btn-sm" style="position:relative; padding:0.35rem 0.65rem;" title="Alert Center">
+          <span>🔔</span>
+        </a>
+
         <!-- Section 5 Benchmark Pill -->
         <a href="{{ url_for('reports.benchmark_view') }}" class="benchmark-badge-btn" title="View Mandatory Section 5 Compliance Verification">
           <div class="pulse-dot"></div>
@@ -267,7 +461,7 @@
     const cur = document.documentElement.getAttribute('data-theme') || 'light';
     const next = cur === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem('dakshin_theme', next);
+    localStorage.setItem('snackflow_theme', next);
     const icon = document.getElementById('theme-icon');
     if (icon) icon.textContent = next === 'dark' ? '☀️' : '🌙';
   }
@@ -277,7 +471,6 @@
     if (sb) sb.classList.toggle('open');
   }
 
-  // Set initial icon
   document.addEventListener('DOMContentLoaded', () => {
     const cur = document.documentElement.getAttribute('data-theme') || 'light';
     const icon = document.getElementById('theme-icon');

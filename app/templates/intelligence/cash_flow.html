@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}Cash Flow Forecasting · SnackFlow ERP{% endblock %}
+{% block page_title %}{{ tr("Cash Flow") }}{% endblock %}
+{% block body %}
+<div class="cash-flow-container">
+
+  <!-- Overview Metric Cards -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+    <div class="card" style="border-left: 4px solid #10b981;">
+      <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Expected Inflows (30d)</span>
+      <div style="font-size: 1.8rem; font-weight: 800; color: #10b981; margin: 0.2rem 0;">
+        ₹{{ flow.expected_inflow_paise | money }}
+      </div>
+      <span style="font-size: 0.8rem; color: var(--text-secondary);">From posted customer receivables</span>
+    </div>
+
+    <div class="card" style="border-left: 4px solid #ef4444;">
+      <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Committed Outflows (30d)</span>
+      <div style="font-size: 1.8rem; font-weight: 800; color: #ef4444; margin: 0.2rem 0;">
+        ₹{{ flow.expected_outflow_paise | money }}
+      </div>
+      <span style="font-size: 0.8rem; color: var(--text-secondary);">Purchases + fixed floor overheads</span>
+    </div>
+
+    <div class="card" style="border-left: 4px solid var(--primary);">
+      <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Net Liquidity Position</span>
+      <div style="font-size: 1.8rem; font-weight: 800; color: {% if flow.net_liquidity_paise >= 0 %}var(--primary){% else %}#ef4444{% endif %}; margin: 0.2rem 0;">
+        ₹{{ flow.net_liquidity_paise | money }}
+      </div>
+      <span style="font-size: 0.8rem; color: #10b981; font-weight: 600;">{{ flow.liquidity_status }}</span>
+    </div>
+  </div>
+
+  <!-- Inflow breakdown table -->
+  <div class="card">
+    <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;">Anticipated Receivables Realization</h3>
+    {% if flow.inflow_breakdown %}
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Source Document</th>
+            <th>Amount Due (₹)</th>
+            <th>Invoice Age</th>
+            <th>Estimated Liquidity Window</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in flow.inflow_breakdown %}
+          <tr>
+            <td style="font-weight: 700;">{{ b.source }}</td>
+            <td style="font-weight: 700;">₹{{ b.amount_paise | money }}</td>
+            <td>{{ b.age_days }} days</td>
+            <td>
+              <span class="badge approved">Within 15 Days</span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p style="color: var(--text-muted); font-size: 0.88rem;">No open receivables pending collection.</p>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

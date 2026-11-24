@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% block title %}Owner Executive Suite - SNACKFLOW ERP{% endblock %}
+
+{% block body %}
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Owner Executive Suite</h1>
+    <div class="page-subtitle">Executive manufacturing oversight, business health index, financial performance, and strategic decisions.</div>
+  </div>
+  <div class="page-actions">
+    <a href="{{ url_for('profitability.view') }}" class="btn btn-secondary">💎 Unit Margins</a>
+    <a href="{{ url_for('decisions.view') }}" class="btn btn-primary">💡 Decision Support</a>
+  </div>
+</div>
+
+<!-- Business Health Score Banner -->
+<div class="card" style="background:linear-gradient(135deg, var(--bg-surface), var(--bg-subtle)); border-left:6px solid {% if health_score >= 80 %}var(--color-success){% elif health_score >= 60 %}var(--brand-primary){% else %}var(--color-danger){% endif %}; margin-bottom:1.5rem;">
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1.25rem;">
+    <div>
+      <div style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">
+        Manufacturing Enterprise Health Index
+      </div>
+      <div style="display:flex; align-items:baseline; gap:0.75rem; margin-top:4px;">
+        <span style="font-size:2.4rem; font-weight:800; color:var(--text-main); font-variant-numeric:tabular-nums;">
+          {{ health_score }}<span style="font-size:1.2rem; color:var(--text-muted);">/100</span>
+        </span>
+        <span class="badge {% if health_score >= 80 %}badge-success{% elif health_score >= 60 %}badge-warning{% else %}badge-danger{% endif %}" style="font-size:0.85rem; padding:0.25rem 0.65rem;">
+          {{ health_rating }}
+        </span>
+      </div>
+      <div style="font-size:0.82rem; color:var(--text-secondary); margin-top:4px;">
+        Calculated from actual production yield, order fulfillment speed, quality clearance, and customer payment timeliness.
+      </div>
+    </div>
+
+    <!-- 4 Pillars Breakdown -->
+    <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:1rem; min-width:320px;">
+      <div style="text-align:center; padding:0.5rem; background:var(--bg-card); border-radius:var(--radius-sm); border:1px solid var(--border-color);">
+        <div style="font-size:0.7rem; color:var(--text-muted);">Yield Efficiency</div>
+        <div style="font-weight:700; color:var(--color-success); font-size:1.05rem;">{{ score_yield }}/25</div>
+      </div>
+      <div style="text-align:center; padding:0.5rem; background:var(--bg-card); border-radius:var(--radius-sm); border:1px solid var(--border-color);">
+        <div style="font-size:0.7rem; color:var(--text-muted);">Order Fulfillment</div>
+        <div style="font-weight:700; color:var(--accent-blue); font-size:1.05rem;">{{ score_orders }}/25</div>
+      </div>
+      <div style="text-align:center; padding:0.5rem; background:var(--bg-card); border-radius:var(--radius-sm); border:1px solid var(--border-color);">
+        <div style="font-size:0.7rem; color:var(--text-muted);">Quality Rate</div>
+        <div style="font-weight:700; color:var(--color-purple); font-size:1.05rem;">{{ score_quality }}/25</div>
+      </div>
+      <div style="text-align:center; padding:0.5rem; background:var(--bg-card); border-radius:var(--radius-sm); border:1px solid var(--border-color);">
+        <div style="font-size:0.7rem; color:var(--text-muted);">Cash Recovery</div>
+        <div style="font-weight:700; color:var(--brand-primary); font-size:1.05rem;">{{ score_liquidity }}/25</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Financial Highlights KPIs -->
+<div class="grid-cards-4">
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <span class="kpi-label">Total Invoiced Sales</span>
+      <div class="kpi-icon-box kpi-icon-blue">₹</div>
+    </div>
+    <div class="kpi-val">Rs {{ total_revenue_paise | money }}</div>
+    <div class="kpi-sub">Gross margin: {{ margin_pct }}%</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <span class="kpi-label">Gross Manufacturing Profit</span>
+      <div class="kpi-icon-box kpi-icon-green">📈</div>
+    </div>
+    <div class="kpi-val" style="color:var(--color-success);">Rs {{ gross_profit_paise | money }}</div>
+    <div class="kpi-sub">Net revenue minus actual COGS</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <span class="kpi-label">Customer Receivables</span>
+      <div class="kpi-icon-box kpi-icon-amber">⌛</div>
+    </div>
+    <div class="kpi-val" style="color:{% if total_receivables_paise > 0 %}var(--color-warning){% else %}var(--text-main){% endif %};">
+      Rs {{ total_receivables_paise | money }}
+    </div>
+    <div class="kpi-sub">Pending customer payments</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <span class="kpi-label">Warehouse Inventory Value</span>
+      <div class="kpi-icon-box kpi-icon-purple">📦</div>
+    </div>
+    <div class="kpi-val">Rs {{ total_inventory_val_paise | money }}</div>
+    <div class="kpi-sub">Weighted-average valuation</div>
+  </div>
+</div>
+
+<!-- Executive Grid: Decision Recommendations & Exceptions -->
+<div class="grid-cards-2">
+  <!-- Left Box: Top Priority Decisions -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">💡 Strategic Decision Recommendations</div>
+      <a href="{{ url_for('decisions.view') }}" class="btn btn-secondary btn-sm">All Decisions →</a>
+    </div>
+    {% if recommendations %}
+      <div style="display:flex; flex-direction:column; gap:0.75rem;">
+        {% for r in recommendations %}
+        <div style="padding:0.75rem; background:var(--bg-subtle); border-radius:var(--radius-sm); border-left:3px solid var(--brand-primary);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <span style="font-weight:700; font-size:0.88rem; color:var(--text-main);">{{ r.title }}</span>
+            <span class="badge badge-{{ r.priority }}">{{ r.priority }}</span>
+          </div>
+          <div style="font-size:0.78rem; color:var(--text-secondary); margin-bottom:6px;">{{ r.suggested_action }}</div>
+          <div style="font-size:0.75rem; color:var(--color-success); font-weight:600;">Impact: {{ r.impact }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-hint">No pressing recommendations. Operations running smoothly.</div>
+    {% endif %}
+  </div>
+
+  <!-- Right Box: Critical Exceptions Center -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">🚨 Active Operational Exceptions</div>
+      <a href="{{ url_for('alerts.view') }}" class="btn btn-secondary btn-sm">All Alerts →</a>
+    </div>
+    {% if alerts %}
+      <div style="display:flex; flex-direction:column; gap:0.75rem;">
+        {% for a in alerts %}
+        <div style="padding:0.75rem; background:var(--bg-subtle); border-radius:var(--radius-sm); border-left:3px solid {% if a.severity == 'critical' %}var(--color-danger){% else %}var(--color-warning){% endif %};">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <span style="font-weight:700; font-size:0.88rem; color:var(--text-main);">{{ a.title }}</span>
+            <span class="badge badge-{{ a.severity }}">{{ a.severity }}</span>
+          </div>
+          <div style="font-size:0.78rem; color:var(--text-secondary); margin-bottom:6px;">{{ a.message }}</div>
+          <a href="{{ a.action_url }}" style="font-size:0.75rem; color:var(--brand-primary); font-weight:600; text-decoration:none;">
+            {{ a.action_label }} →
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-hint">Zero critical exceptions. System healthy.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

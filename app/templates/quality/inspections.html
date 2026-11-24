@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% block title %}Quality Management & QA - SNACKFLOW ERP{% endblock %}
+
+{% block body %}
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Quality Management & QA Control</h1>
+    <div class="page-subtitle">Inspect incoming raw materials, in-process cooking, and finished goods batches.</div>
+  </div>
+  <div class="page-actions">
+    <a href="{{ url_for('quality.inspection_new') }}" class="btn btn-primary">➕ New Inspection</a>
+    <a href="{{ url_for('reports.view', slug='quality') }}?fmt=xlsx" class="btn btn-secondary">Export Excel</a>
+  </div>
+</div>
+
+<!-- Quality KPIs -->
+<div class="grid-cards-4">
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <span class="kpi-label">Pass Rate</span>
+      <div class="kpi-icon-box kpi-icon-green">✓</div>
+    </div>
+    <div class="kpi-val" style="color:var(--color-success);">{{ summary.pass_rate_pct }}%</div>
+    <div class="kpi-sub">{{ summary.approved }} of {{ summary.total }} passed</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <span class="kpi-label">Rejections</span>
+      <div class="kpi-icon-box kpi-icon-red">✕</div>
+    </div>
+    <div class="kpi-val" style="color:var(--color-danger);">{{ summary.rejected }}</div>
+    <div class="kpi-sub">Batches rejected & blocked</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <span class="kpi-label">Quarantine Hold</span>
+      <div class="kpi-icon-box kpi-icon-amber">⏸️</div>
+    </div>
+    <div class="kpi-val">{{ summary.quarantine }}</div>
+    <div class="kpi-sub">Awaiting lab / re-test</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <span class="kpi-label">Pending Inspections</span>
+      <div class="kpi-icon-box kpi-icon-blue">⏱️</div>
+    </div>
+    <div class="kpi-val">{{ summary.pending }}</div>
+    <div class="kpi-sub">Awaiting QA sign-off</div>
+  </div>
+</div>
+
+<!-- Inspections Table -->
+<div class="table-container">
+  <div class="table-toolbar">
+    <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+      <a href="{{ url_for('quality.inspections') }}" class="btn btn-sm {% if not status %}btn-primary{% else %}btn-secondary{% endif %}">All</a>
+      <a href="{{ url_for('quality.inspections', status='pending') }}" class="btn btn-sm {% if status=='pending' %}btn-primary{% else %}btn-secondary{% endif %}">Pending</a>
+      <a href="{{ url_for('quality.inspections', status='approved') }}" class="btn btn-sm {% if status=='approved' %}btn-primary{% else %}btn-secondary{% endif %}">Approved</a>
+      <a href="{{ url_for('quality.inspections', status='rejected') }}" class="btn btn-sm {% if status=='rejected' %}btn-primary{% else %}btn-secondary{% endif %}">Rejected</a>
+      <a href="{{ url_for('quality.inspections', status='quarantine') }}" class="btn btn-sm {% if status=='quarantine' %}btn-primary{% else %}btn-secondary{% endif %}">Quarantine</a>
+    </div>
+    <input type="text" id="qc-search" class="table-search-input" placeholder="Search inspections..." onkeyup="filterTable('qc-search', 'qc-table')">
+  </div>
+  <div class="table-responsive">
+    <table class="data-table" id="qc-table">
+      <thead>
+        <tr>
+          <th>Inspection No</th>
+          <th>Type</th>
+          <th>Item / Material</th>
+          <th>Batch / Lot</th>
+          <th>Status</th>
+          <th>Defect Category</th>
+          <th>Inspector</th>
+          <th>Date</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if inspections %}
+          {% for qi in inspections %}
+          <tr>
+            <td style="font-weight:700;">
+              <a href="{{ url_for('quality.inspection_detail', qid=qi.id) }}" style="color:var(--brand-primary); text-decoration:none;">
+                {{ qi.inspection_no }}
+              </a>
+            </td>
+            <td>
+              <span class="badge badge-subtle">
+                {% if qi.inspection_type == 'incoming_rm' %}Incoming RM
+                {% elif qi.inspection_type == 'in_process' %}In-Process
+                {% else %}Finished Goods{% endif %}
+              </span>
+            </td>
+            <td style="font-weight:600;">{{ qi.item_name }} ({{ qi.item_code }})</td>
+            <td><code>{{ qi.batch_no or '-' }}</code></td>
+            <td>
+              <span class="badge badge-{{ qi.status }}">
+                {{ qi.status | upper }}
+              </span>
+            </td>
+            <td>{{ qi.defect_category or 'None / Pass' }}</td>
+            <td>{{ qi.inspector_name or 'System' }}</td>
+            <td>{{ qi.inspected_at[:10] }}</td>
+            <td>
+              <a href="{{ url_for('quality.inspection_detail', qid=qi.id) }}" class="btn btn-secondary btn-sm">
+                Review / Verdict →
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="9" class="empty-hint">No inspections found matching criteria.</td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

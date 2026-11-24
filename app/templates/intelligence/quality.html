@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% block title %}Quality Management & Food Safety (QA) · SnackFlow ERP{% endblock %}
+{% block page_title %}{{ tr("Quality") }}{% endblock %}
+{% block body %}
+<div class="quality-container">
+
+  <div class="card" style="margin-bottom: 1.5rem; border-left: 4px solid var(--primary);">
+    <h2 style="font-size: 1.4rem; font-weight: 800; margin: 0;">Food Safety & Quality Inspection Checklists (QA)</h2>
+    <p style="color: var(--text-secondary); font-size: 0.88rem; margin: 0.25rem 0 0;">
+      HACCP and FSSAI sensory checks, moisture level measurement, sealing integrity verification, and batch release sign-off.
+    </p>
+  </div>
+
+  <!-- Record Inspection Card -->
+  <div class="card" style="margin-bottom: 1.5rem;">
+    <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;">Perform Quality Inspection & Sign-off</h3>
+    <form method="post" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; align-items: flex-end;">
+      <div class="form-group" style="margin: 0;">
+        <label>Inspection Target</label>
+        <select name="target_type" required>
+          <option value="batch">Production Batch</option>
+          <option value="purchase">Raw Material Inward</option>
+        </select>
+      </div>
+
+      <div class="form-group" style="margin: 0;">
+        <label>Target Production Batch</label>
+        <select name="target_id" required>
+          {% for r in runs %}
+          <option value="{{ r.id }}">{{ r.run_no }} ({{ r.batch_no }})</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group" style="margin: 0;">
+        <label>Moisture Content (%)</label>
+        <input type="number" step="0.1" name="moisture" placeholder="e.g. 2.1" value="2.1" required>
+      </div>
+
+      <div class="form-group" style="margin: 0;">
+        <label>Seal Integrity</label>
+        <select name="seal">
+          <option value="Passed">Airtight Hermetic (Pass)</option>
+          <option value="Minor Leak">Minor Seam Leak</option>
+          <option value="Failed">Burst / Open Seam (Fail)</option>
+        </select>
+      </div>
+
+      <div class="form-group" style="margin: 0;">
+        <label>Aroma / Taste (Crispness)</label>
+        <select name="aroma">
+          <option value="Pass">Crisp & Fragrant (Pass)</option>
+          <option value="Sub-standard">Low Crispness</option>
+          <option value="Off-odor">Rancid / Off-odor (Fail)</option>
+        </select>
+      </div>
+
+      <div class="form-group" style="margin: 0;">
+        <label>Overall QA Disposition</label>
+        <select name="status" required>
+          <option value="passed">Release for Dispatch (Passed)</option>
+          <option value="quarantine">Quarantine for Re-check</option>
+          <option value="rejected">Reject & Condemn</option>
+        </select>
+      </div>
+
+      <div class="form-group" style="margin: 0;">
+        <label>Inspector Remarks</label>
+        <input type="text" name="remarks" placeholder="Organoleptic test cleared">
+      </div>
+
+      <div>
+        <button type="submit" class="btn" style="width: 100%;">Submit QA Sign-off ✓</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Inspection History -->
+  <div class="card">
+    <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;">Quality Audit Trail</h3>
+    {% if inspections %}
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>QA Cert #</th>
+            <th>Target Type</th>
+            <th>Moisture</th>
+            <th>Seal</th>
+            <th>Aroma / Crisp</th>
+            <th>Disposition</th>
+            <th>Inspector</th>
+            <th>Remarks</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for q in inspections %}
+          <tr>
+            <td style="font-weight: 700;">{{ q.inspection_no }}</td>
+            <td><span class="badge info">{{ q.target_type | upper }}</span></td>
+            <td>{{ q.moisture_pct }}%</td>
+            <td>{{ q.seal_integrity }}</td>
+            <td>{{ q.aroma_taste }}</td>
+            <td>
+              <span class="badge {% if q.status == 'passed' %}approved{% elif q.status == 'quarantine' %}submitted{% else %}rejected{% endif %}">
+                {{ q.status | upper }}
+              </span>
+            </td>
+            <td>{{ q.inspector_name or 'QA Supervisor' }}</td>
+            <td style="font-size: 0.8rem; color: var(--text-secondary);">{{ q.remarks or '-' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p style="color: var(--text-muted); font-size: 0.88rem;">No formal QA inspections logged yet.</p>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

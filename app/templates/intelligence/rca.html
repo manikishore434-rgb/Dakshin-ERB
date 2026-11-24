@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block title %}Root Cause Analysis (RCA) Assistant · SnackFlow ERP{% endblock %}
+{% block page_title %}{{ tr("Root Cause Analysis") }}{% endblock %}
+{% block body %}
+<div class="rca-container">
+
+  <div class="card" style="margin-bottom: 1.5rem; border-left: 4px solid var(--primary);">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h2 style="font-size: 1.4rem; font-weight: 800; margin: 0;">Automated Root Cause Diagnostic Assistant</h2>
+        <p style="color: var(--text-secondary); font-size: 0.88rem; margin: 0.25rem 0 0;">
+          Rule-based expert diagnostic system connecting material variance, yield loss, and packaging damage with actionable shopfloor causes.
+        </p>
+      </div>
+
+      <!-- Filter by Batch Run -->
+      <form method="get" style="display: flex; align-items: center; gap: 0.5rem;">
+        <select name="run_id" onchange="this.form.submit()" style="font-size: 0.85rem; padding: 0.4rem 0.6rem;">
+          <option value="">All Flagged Batches</option>
+          {% for r in runs %}
+          <option value="{{ r.id }}" {% if selected_rid == r.id %}selected{% endif %}>{{ r.run_no }} ({{ r.batch_no }})</option>
+          {% endfor %}
+        </select>
+        {% if selected_rid %}
+        <a href="{{ url_for('intelligence.root_cause_analysis') }}" class="btn secondary btn-sm">Clear</a>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+
+  <!-- Diagnostic Cases -->
+  {% if cases %}
+  <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+    {% for c in cases %}
+    <div class="card" style="border-top: 3px solid {% if c.severity == 'High' %}#ef4444{% elif c.severity == 'Medium' %}#f59e0b{% else %}#3b82f6{% endif %};">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <span class="badge {% if c.severity == 'High' %}rejected{% elif c.severity == 'Medium' %}submitted{% else %}invoiced{% endif %}">
+            {{ c.severity | upper }} SEVERITY
+          </span>
+          <span style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted);">{{ c.category }}</span>
+        </div>
+        <div style="font-size: 0.82rem;">
+          Tied to: <strong><a href="{{ url_for('production.run_detail', rid=c.run_id) }}">{{ c.run_no }}</a></strong> · Batch: <code>{{ c.batch_no }}</code>
+        </div>
+      </div>
+
+      <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.5rem;">
+        {{ c.detected_issue }}
+      </h3>
+
+      <!-- Confirmed Fact / Evidence -->
+      <div style="background: var(--bg-surface-elevated); padding: 0.65rem 0.85rem; border-radius: var(--radius-sm); margin-bottom: 0.85rem; border-left: 3px solid #3b82f6;">
+        <div style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: #3b82f6; margin-bottom: 0.2rem;">
+          [CONFIRMED AUDIT FACT] Supporting Transaction Data
+        </div>
+        <div style="font-size: 0.85rem; color: var(--text-primary); font-family: var(--font-mono);">
+          {{ c.supporting_data }}
+        </div>
+      </div>
+
+      <!-- Probable Causes -->
+      <div style="margin-bottom: 0.85rem;">
+        <div style="font-size: 0.78rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">
+          [HYPOTHESES] Potential Shopfloor Contributing Factors:
+        </div>
+        <ul style="margin: 0; padding-left: 1.25rem; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.45;">
+          {% for cause in c.possible_causes %}
+          <li>{{ cause }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <!-- Investigation & Actions -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0.75rem; border-top: 1px solid var(--border-color); padding-top: 0.75rem;">
+        <div>
+          <div style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: var(--primary);">Recommended Diagnostic Checks:</div>
+          <div style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 0.2rem;">
+            🔍 {{ c.suggested_investigation }}
+          </div>
+        </div>
+        <div>
+          <div style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: #10b981;">Corrective Actionable Plan:</div>
+          <div style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 0.2rem;">
+            ✓ {{ c.recommended_actions }}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card" style="text-align: center; padding: 3rem 1rem;">
+    <div style="font-size: 2rem; margin-bottom: 0.5rem;">✨</div>
+    <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary);">Zero Active Anomalies Detected</h3>
+    <p style="color: var(--text-muted); font-size: 0.85rem; max-width: 480px; margin: 0 auto;">
+      All completed production batches are currently running within the configured 3.0% benchmark tolerance window.
+    </p>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

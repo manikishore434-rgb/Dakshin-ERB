@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block title %}Operational Exceptions & Alerts - SNACKFLOW ERP{% endblock %}
+
+{% block body %}
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Operational Exceptions & Active Alerts</h1>
+    <div class="page-subtitle">Real-time surveillance across raw material inventory, order blocks, production yield, and cash flow.</div>
+  </div>
+</div>
+
+<!-- Alert Severity Filter Toolbar -->
+<div class="grid-cards-4">
+  <a href="{{ url_for('alerts.view', severity='critical') }}" class="kpi-card" style="text-decoration:none; border-left:4px solid var(--color-danger);">
+    <div class="kpi-top">
+      <span class="kpi-label" style="color:var(--color-danger);">Critical</span>
+      <div class="kpi-icon-box kpi-icon-red">🔥</div>
+    </div>
+    <div class="kpi-val" style="color:var(--color-danger);">{{ counts.critical }}</div>
+    <div class="kpi-sub">Immediate operational halts</div>
+  </a>
+
+  <a href="{{ url_for('alerts.view', severity='high') }}" class="kpi-card" style="text-decoration:none; border-left:4px solid var(--color-warning);">
+    <div class="kpi-top">
+      <span class="kpi-label" style="color:var(--color-warning);">High</span>
+      <div class="kpi-icon-box kpi-icon-amber">⚡</div>
+    </div>
+    <div class="kpi-val" style="color:var(--color-warning);">{{ counts.high }}</div>
+    <div class="kpi-sub">Variances & overdue dues</div>
+  </a>
+
+  <a href="{{ url_for('alerts.view', severity='medium') }}" class="kpi-card" style="text-decoration:none; border-left:4px solid var(--accent-blue);">
+    <div class="kpi-top">
+      <span class="kpi-label" style="color:var(--accent-blue);">Medium</span>
+      <div class="kpi-icon-box kpi-icon-blue">⏱️</div>
+    </div>
+    <div class="kpi-val">{{ counts.medium }}</div>
+    <div class="kpi-sub">Pending dispatches & approvals</div>
+  </a>
+
+  <a href="{{ url_for('alerts.view') }}" class="kpi-card" style="text-decoration:none;">
+    <div class="kpi-top">
+      <span class="kpi-label">Total Exceptions</span>
+      <div class="kpi-icon-box kpi-icon-purple">📊</div>
+    </div>
+    <div class="kpi-val">{{ counts.total }}</div>
+    <div class="kpi-sub">View all operational alerts</div>
+  </a>
+</div>
+
+<!-- Category Filters -->
+<div style="display:flex; gap:0.5rem; margin-bottom:1.25rem; flex-wrap:wrap;">
+  <a href="{{ url_for('alerts.view') }}" class="btn btn-sm {% if not current_cat and not current_sev %}btn-primary{% else %}btn-secondary{% endif %}">All Categories</a>
+  <a href="{{ url_for('alerts.view', category='Inventory') }}" class="btn btn-sm {% if current_cat=='Inventory' %}btn-primary{% else %}btn-secondary{% endif %}">📦 Inventory</a>
+  <a href="{{ url_for('alerts.view', category='Orders') }}" class="btn btn-sm {% if current_cat=='Orders' %}btn-primary{% else %}btn-secondary{% endif %}">🛒 Orders</a>
+  <a href="{{ url_for('alerts.view', category='Production') }}" class="btn btn-sm {% if current_cat=='Production' %}btn-primary{% else %}btn-secondary{% endif %}">⚙️ Production</a>
+  <a href="{{ url_for('alerts.view', category='Quality') }}" class="btn btn-sm {% if current_cat=='Quality' %}btn-primary{% else %}btn-secondary{% endif %}">🛡️ Quality</a>
+  <a href="{{ url_for('alerts.view', category='Finance') }}" class="btn btn-sm {% if current_cat=='Finance' %}btn-primary{% else %}btn-secondary{% endif %}">💳 Finance</a>
+</div>
+
+<!-- Alerts Table -->
+<div class="table-container">
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Severity</th>
+          <th>Domain</th>
+          <th>Exception Title</th>
+          <th>Details & Impact</th>
+          <th>Recommended Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if alerts %}
+          {% for a in alerts %}
+          <tr>
+            <td>
+              <span class="badge badge-{{ a.severity }}">{{ a.severity | upper }}</span>
+            </td>
+            <td><span class="badge badge-subtle">{{ a.category }}</span></td>
+            <td style="font-weight:700; color:var(--text-main);">{{ a.title }}</td>
+            <td style="font-size:0.84rem;">{{ a.message }}</td>
+            <td>
+              <a href="{{ a.action_url }}" class="btn btn-primary btn-sm">
+                {{ a.action_label }} →
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="5" class="empty-hint">No operational exceptions found matching criteria.</td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

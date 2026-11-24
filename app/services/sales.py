@@ -17,7 +17,7 @@ def price_for(db, customer_id, item):
     return r["price_paise"] if r else item["price_paise"]
 
 
-def create_order(db, user, customer_id, lines, client_uuid=None, notes=""):
+def create_order(db, user, customer_id, lines, client_uuid=None, notes="", priority="normal", delivery_date=None):
     """lines = [{'item_id':, 'qty':, 'unit':}]. Idempotent on client_uuid (safe for offline re-sync).
     Returns (order_id, created: bool)."""
     if client_uuid:
@@ -39,14 +39,14 @@ def create_order(db, user, customer_id, lines, client_uuid=None, notes=""):
             raise ServiceError("Quantity must be positive")
         prepared.append((item["id"], q, price_for(db, customer_id, item), f"{ln['qty']} {ln.get('unit') or item['base_unit']}"))
     n = next_seq(db, "ORD")
-    cur = db.execute("INSERT INTO orders(order_no,client_uuid,customer_id,salesman_id,status,notes,created_at,updated_at)"
-                     " VALUES (?,?,?,?, 'submitted',?,?,?)",
-                     (f"ORD-{n:05d}", client_uuid, customer_id, user["id"], notes, NOW(), NOW()))
+    cur = db.execute("INSERT INTO orders(order_no,client_uuid,customer_id,salesman_id,status,notes,priority,delivery_date,created_at,updated_at)"
+                     " VALUES (?,?,?,?, 'submitted',?,?,?,?,?)",
+                     (f"ORD-{n:05d}", client_uuid, customer_id, user["id"], notes, priority or "normal", delivery_date, NOW(), NOW()))
     oid = cur.lastrowid
     for item_id, q, price, note in prepared:
         db.execute("INSERT INTO order_lines(order_id,item_id,qty_milli,price_paise,uom_note) VALUES (?,?,?,?,?)",
                    (oid, item_id, q, price, note))
-    audit.log(db, user, "order", oid, "create", {"customer_id": customer_id, "lines": len(prepared)})
+    audit.log(db, user, "order", oid, "create", {"customer_id": customer_id, "lines": len(prepared), "priority": priority})
     return oid, True
 
 
@@ -95,7 +95,7 @@ def edit_order(db, user, order_id, changes):
     audit.log(db, user, "order", order_id, "edit", {"before": before, "after": {str(k): v for k, v in changes.items()}})
 
 
-def approve_order(db, user, order_id, allow_shortage=False):
+def approve_order(db, user, order_id, allow_shortage=False, allow_credit_breach=True):
     o = db.execute("SELECT * FROM orders WHERE id=?", (order_id,)).fetchone()
     if o["status"] != "submitted":
         raise ServiceError("Only submitted orders can be approved")
@@ -104,6 +104,16 @@ def approve_order(db, user, order_id, allow_shortage=False):
         raise ServiceError("Stock does not cover this order: " + "; ".join(
             f"{c['name']} short by {fmt_qty(c['shortage'])}" for c in short) +
             ". Reduce the quantity, or tick 'approve despite shortage' to back-order it.")
+
+    # Optional Credit Limit verification
+    cust = db.execute("SELECT * FROM customers WHERE id=?", (o["customer_id"],)).fetchone()
+    if cust and cust["credit_limit_paise"] > 0 and not allow_credit_breach:
+        recs, _ = receivables(db)
+        out_bal = sum(r["outstanding"] for r in recs if r["invoice"]["customer_id"] == o["customer_id"])
+        tot_order = order_total_paise(db, order_id)
+        if out_bal + tot_order > cust["credit_limit_paise"]:
+            raise ServiceError(f"Credit limit exceeded: Outstanding Rs {out_bal/100:.2f} + Order Rs {tot_order/100:.2f} exceeds limit Rs {cust['credit_limit_paise']/100:.2f}")
+
     db.execute("UPDATE orders SET status='approved', updated_at=? WHERE id=?", (NOW(), order_id))
     audit.log(db, user, "order", order_id, "approve", {"shortage": [c["shortage"] for c in short]})
 
@@ -114,6 +124,15 @@ def reject_order(db, user, order_id, reason):
         raise ServiceError("This order can no longer be rejected")
     db.execute("UPDATE orders SET status='rejected', reject_reason=?, updated_at=? WHERE id=?", (reason, NOW(), order_id))
     audit.log(db, user, "order", order_id, "reject", {"reason": reason})
+
+
+def cancel_order(db, user, order_id, reason=""):
+    o = db.execute("SELECT * FROM orders WHERE id=?", (order_id,)).fetchone()
+    if not o or o["status"] in ("dispatched", "cancelled"):
+        raise ServiceError("This order cannot be cancelled")
+    db.execute("UPDATE orders SET status='cancelled', cancel_reason=?, cancelled_at=?, updated_at=? WHERE id=?",
+               (reason, NOW(), NOW(), order_id))
+    audit.log(db, user, "order", order_id, "cancel", {"reason": reason})
 
 
 # ---------------------------------------------------------------- GST
@@ -161,14 +180,20 @@ def create_invoice(db, user, order_id, date=None):
 
 
 def dispatch(db, user, invoice_id, date=None):
-    """Dispatch reduces finished-goods stock. Fails (and posts nothing) if stock is short."""
+    """Dispatch reduces finished-goods stock. Fails (and posts nothing) if stock is short or QA blocked."""
     date = date or today()
     inv = db.execute("SELECT * FROM invoices WHERE id=?", (invoice_id,)).fetchone()
     if inv["status"] != "posted":
         raise ServiceError("Cancelled invoices cannot be dispatched")
     if inv["dispatched_on"]:
         raise ServiceError("Already dispatched")
-    for ln in db.execute("SELECT * FROM invoice_lines WHERE invoice_id=?", (invoice_id,)).fetchall():
+    lines = db.execute("SELECT * FROM invoice_lines WHERE invoice_id=?", (invoice_id,)).fetchall()
+    for ln in lines:
+        from . import quality
+        ok, reason = quality.is_batch_dispatchable(db, ln["item_id"])
+        if not ok:
+            raise ServiceError(f"Dispatch blocked by Quality Control: {reason}")
+    for ln in lines:
         stock.post(db, item_id=ln["item_id"], qty_milli=-ln["qty_milli"], move_type="dispatch", source_type="invoice",
                    source_id=invoice_id, user=user, date=date)
     db.execute("UPDATE invoices SET dispatched_on=? WHERE id=?", (date, invoice_id))

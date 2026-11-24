@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Role Switcher - SNACKFLOW ERP{% endblock %}
+
+{% block body %}
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Role-Based Access Control Switcher</h1>
+    <div class="page-subtitle">Test and explore the platform across different manufacturing enterprise personas.</div>
+  </div>
+</div>
+
+<div class="grid-cards-2">
+  {% for u in users %}
+  <div class="card" style="display:flex; flex-direction:column; justify-content:space-between;">
+    <div>
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem;">
+        <div style="display:flex; align-items:center; gap:0.75rem;">
+          <div class="user-avatar" style="width:40px; height:40px; font-size:1.1rem;">
+            {{ u.full_name[:1] }}
+          </div>
+          <div>
+            <h3 style="font-size:1.05rem; font-weight:700; color:var(--text-main);">{{ u.full_name }}</h3>
+            <span class="badge badge-subtle">@{{ u.username }}</span>
+          </div>
+        </div>
+        <span class="badge {% if u.role == 'admin' %}badge-danger{% elif u.role == 'owner' %}badge-purple{% elif u.role == 'production' %}badge-warning{% elif u.role == 'salesman' %}badge-blue{% else %}badge-success{% endif %}">
+          {{ u.role | capitalize }}
+        </span>
+      </div>
+      <p style="font-size:0.84rem; color:var(--text-secondary); margin-bottom:1rem;">
+        {% if u.role == 'admin' %}
+          Full factory administration, order verification, credit approval, master settings, and GST invoicing.
+        {% elif u.role == 'owner' %}
+          Executive command center, profitability intelligence, unit economics, business health score, and decision support.
+        {% elif u.role == 'production' %}
+          BOM planning, material issuance, batch runs, recipe variance tracking, overhead logging, and Goods Receipt (GRN).
+        {% elif u.role == 'salesman' %}
+          Customer order entry, mobile catalog with customer pricing, order status tracking, and offline sales sync.
+        {% elif u.role == 'accountant' %}
+          GST summaries (GSTR-1, 3B), customer receivables & ageing, audit trail reports, and financial reconciliation.
+        {% endif %}
+      </p>
+    </div>
+
+    <form method="post" action="{{ url_for('auth.roles') }}">
+      <input type="hidden" name="role" value="{{ u.username }}">
+      <button type="submit" class="btn {% if g.user and g.user.id == u.id %}btn-secondary{% else %}btn-primary{% endif %} btn-sm" style="width:100%;">
+        {% if g.user and g.user.id == u.id %}Active Persona ✓{% else %}Switch to {{ u.full_name }} →{% endif %}
+      </button>
+    </form>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

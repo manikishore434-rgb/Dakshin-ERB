@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% block title %}Material Requirements Planning (MRP) - SNACKFLOW ERP{% endblock %}
+
+{% block body %}
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Material Requirements Planning (MRP)</h1>
+    <div class="page-subtitle">Calculates gross & net material demand from approved sales orders and BOM recipes.</div>
+  </div>
+  <div class="page-actions">
+    <form method="post" action="{{ url_for('mrp.generate_pos') }}" style="display:inline;">
+      <button type="submit" class="btn btn-primary" onclick="return confirm('Generate Draft Purchase Orders for all suggested material deficits?')">
+        ⚡ Generate Suggested POs
+      </button>
+    </form>
+    <a href="{{ url_for('reports.view', slug='mrp') }}?fmt=xlsx" class="btn btn-secondary">Export Excel</a>
+    <a href="{{ url_for('reports.view', slug='mrp') }}?fmt=pdf" class="btn btn-secondary">Print PDF</a>
+  </div>
+</div>
+
+<!-- Demand Summary KPIs -->
+<div class="grid-cards-4">
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <span class="kpi-label">Open Sales Demand</span>
+      <div class="kpi-icon-box kpi-icon-blue">🛒</div>
+    </div>
+    <div class="kpi-val">{{ mrp.demand_orders | length }}</div>
+    <div class="kpi-sub">Approved & Invoiced Orders</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <span class="kpi-label">Material Shortages</span>
+      <div class="kpi-icon-box kpi-icon-red">⚠️</div>
+    </div>
+    <div class="kpi-val" style="color:var(--color-danger);">{{ mrp.shortages | length }}</div>
+    <div class="kpi-sub">Items below safety threshold</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <span class="kpi-label">Suggested PO Batches</span>
+      <div class="kpi-icon-box kpi-icon-amber">📋</div>
+    </div>
+    <div class="kpi-val">{{ mrp.suggested_pos | length }}</div>
+    <div class="kpi-sub">Supplier purchase orders needed</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <span class="kpi-label">Estimated Outlay</span>
+      <div class="kpi-icon-box kpi-icon-green">₹</div>
+    </div>
+    <div class="kpi-val">
+      {% set tot_outlay = mrp.suggested_pos | sum(attribute='total_est_cost_paise') %}
+      Rs {{ tot_outlay | money }}
+    </div>
+    <div class="kpi-sub">Procurement cost to fulfill demand</div>
+  </div>
+</div>
+
+<!-- Section 1: Finished Goods Production Requirement -->
+<div class="table-container">
+  <div class="table-toolbar">
+    <div style="font-weight:700; font-size:0.95rem; color:var(--text-main);">
+      Finished Goods Production Requirements
+    </div>
+    <span class="badge badge-subtle">{{ mrp.production_suggestions | length }} Products</span>
+  </div>
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Product Name</th>
+          <th>Code</th>
+          <th class="num">Customer Demand</th>
+          <th class="num">Stock on Hand</th>
+          <th class="num">Net Deficit</th>
+          <th class="num">Batches to Schedule</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ps in mrp.production_suggestions %}
+        <tr>
+          <td style="font-weight:600;">{{ ps.product.name }}</td>
+          <td><code>{{ ps.product.code }}</code></td>
+          <td class="num">{{ ps.demanded_milli | qty }} pkts</td>
+          <td class="num">{{ ps.on_hand_milli | qty }} pkts</td>
+          <td class="num" style="font-weight:700; color:{% if ps.net_deficit_milli > 0 %}var(--color-danger){% else %}var(--color-success){% endif %};">
+            {{ ps.net_deficit_milli | qty }} pkts
+          </td>
+          <td class="num">
+            {% if ps.batches_needed > 0 %}
+            <span class="badge badge-warning">{{ ps.batches_needed }} batch(es)</span>
+            {% else %}
+            <span class="badge badge-success">Covered</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if ps.batches_needed > 0 %}
+            <a href="{{ url_for('production.run_new') }}?product_id={{ ps.product.id }}&batches={{ ps.batches_needed }}" class="btn btn-primary btn-sm">
+              Schedule Run →
+            </a>
+            {% else %}
+            <span class="muted">Sufficient stock</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Section 2: Raw & Packaging Material Requirements -->
+<div class="table-container">
+  <div class="table-toolbar">
+    <div style="font-weight:700; font-size:0.95rem; color:var(--text-main);">
+      Raw & Packaging Material Requirements (BOM Explosion)
+    </div>
+    <input type="text" id="mrp-search" class="table-search-input" placeholder="Search materials..." onkeyup="filterTable('mrp-search', 'mrp-table')">
+  </div>
+  <div class="table-responsive">
+    <table class="data-table" id="mrp-table">
+      <thead>
+        <tr>
+          <th>Material</th>
+          <th>Type</th>
+          <th class="num">Gross Demand</th>
+          <th class="num">On Hand</th>
+          <th class="num">Inbound (Open PO)</th>
+          <th class="num">Safety Stock</th>
+          <th class="num">Net Deficit</th>
+          <th class="num">Suggested Buy</th>
+          <th>Preferred Supplier</th>
+          <th class="num">Est. Cost</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in mrp.material_requirements %}
+        <tr {% if m.net_deficit_milli > 0 %}style="background:rgba(220, 38, 38, 0.04);"{% endif %}>
+          <td style="font-weight:600;">{{ m.item.name }}</td>
+          <td><span class="badge badge-subtle">{{ m.item.kind }}</span></td>
+          <td class="num">{{ m.gross_req_milli | qty }} {{ m.item.base_unit }}</td>
+          <td class="num">{{ m.on_hand_milli | qty }} {{ m.item.base_unit }}</td>
+          <td class="num">{{ m.open_po_milli | qty }} {{ m.item.base_unit }}</td>
+          <td class="num">{{ m.safety_stock_milli | qty }} {{ m.item.base_unit }}</td>
+          <td class="num" style="font-weight:700; color:{% if m.net_deficit_milli > 0 %}var(--color-danger){% else %}var(--color-success){% endif %};">
+            {{ m.net_deficit_milli | qty }} {{ m.item.base_unit }}
+          </td>
+          <td class="num" style="font-weight:600;">
+            {% if m.suggested_buy_milli > 0 %}
+            {{ m.suggested_buy_milli | qty }} {{ m.item.base_unit }}
+            {% else %}-{% endif %}
+          </td>
+          <td>{{ m.supplier_name }}</td>
+          <td class="num">
+            {% if m.est_cost_paise > 0 %}Rs {{ m.est_cost_paise | money }}{% else %}-{% endif %}
+          </td>
+          <td>
+            {% if m.net_deficit_milli > 0 %}
+            <span class="badge badge-danger">Shortage</span>
+            {% else %}
+            <span class="badge badge-success">Adequate</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

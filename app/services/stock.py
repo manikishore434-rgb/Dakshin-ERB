@@ -67,3 +67,64 @@ def wac_rate_paise(db, item_id):
     """Current weighted-average rate in paise per base unit (Decimal) or None."""
     q, v = balance(db, item_id)
     return D(v) * 1000 / D(q) if q > 0 else None
+
+
+def fefo_batches(db, item_id):
+    """Returns batches of an item with remaining stock sorted First-Expired-First-Out (FEFO)."""
+    rows = db.execute(
+        """SELECT batch_no, expiry, COALESCE(SUM(qty_milli), 0) remaining_milli,
+                  COALESCE(SUM(value_paise), 0) val_paise
+           FROM stock_ledger
+           WHERE item_id=? AND batch_no IS NOT NULL AND batch_no != ''
+           GROUP BY batch_no, expiry
+           HAVING remaining_milli > 0
+           ORDER BY CASE WHEN expiry IS NULL OR expiry = '' THEN '9999-12-31' ELSE expiry END ASC, date ASC""",
+        (item_id,),
+    ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def stock_analytics(db, as_of=None):
+    """Identifies critical inventory, overstock, expiring materials, and valuation breakdown."""
+    items = db.execute("SELECT * FROM items WHERE active=1 ORDER BY kind DESC, name").fetchall()
+    critical = []
+    overstock = []
+    total_val = 0
+    by_kind = {"raw": 0, "packaging": 0, "finished": 0}
+
+    for item in items:
+        q, v = balance(db, item["id"], upto=as_of)
+        total_val += v
+        by_kind[item["kind"]] = by_kind.get(item["kind"], 0) + v
+
+        rop = item["reorder_level_milli"] or 0
+        safety = item["safety_stock_milli"] or 0
+        max_lvl = item["max_stock_milli"] or 0
+
+        if rop > 0 and q <= rop:
+            critical.append({**dict(item), "qty_milli": q, "val_paise": v, "is_safety": safety > 0 and q <= safety})
+        if max_lvl > 0 and q > max_lvl:
+            overstock.append({**dict(item), "qty_milli": q, "val_paise": v, "excess_milli": q - max_lvl})
+
+    # Expiring lots in next 60 days
+    now_date = as_of or dt.date.today().isoformat()
+    horizon = (dt.date.fromisoformat(now_date) + dt.timedelta(days=60)).isoformat()
+    expiring = db.execute(
+        """SELECT l.item_id, i.name item_name, i.kind, i.base_unit, l.batch_no, l.expiry,
+                  COALESCE(SUM(l.qty_milli), 0) remaining_milli
+           FROM stock_ledger l
+           JOIN items i ON i.id=l.item_id
+           WHERE l.expiry IS NOT NULL AND l.expiry != '' AND l.expiry <= ?
+           GROUP BY l.item_id, l.batch_no, l.expiry
+           HAVING remaining_milli > 0
+           ORDER BY l.expiry ASC""",
+        (horizon,),
+    ).fetchall()
+
+    return {
+        "total_valuation_paise": total_val,
+        "valuation_by_kind": by_kind,
+        "critical_items": critical,
+        "overstock_items": overstock,
+        "expiring_batches": [dict(e) for e in expiring],
+    }

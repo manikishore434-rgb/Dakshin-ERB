@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Cost Fluctuation Intelligence · SnackFlow ERP{% endblock %}
+{% block page_title %}Cost Fluctuation Intelligence{% endblock %}
+{% block body %}
+<div class="cost-fluctuations-container">
+
+  <div class="card" style="margin-bottom: 1.5rem; border-left: 4px solid var(--primary);">
+    <h2 style="font-size: 1.4rem; font-weight: 800; margin: 0;">Raw Material Procurement Price Tracker</h2>
+    <p style="color: var(--text-secondary); font-size: 0.88rem; margin: 0.25rem 0 0;">
+      Tracks commodity price movements across historical purchase invoices to forecast recipe margin impact.
+    </p>
+  </div>
+
+  <div class="card">
+    {% if rows %}
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Ingredient / Material</th>
+            <th>Supplier</th>
+            <th>Purchase Rate</th>
+            <th>Unit</th>
+            <th>Benchmark Base Rate</th>
+            <th>Cost Shift Impact</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+          <tr>
+            <td>{{ r.date }}</td>
+            <td style="font-weight: 700;">{{ r.item_name }}</td>
+            <td>{{ r.supplier_name or 'Local Vendor' }}</td>
+            <td style="font-weight: 800; color: var(--primary);">₹{{ r.rate }}</td>
+            <td>{{ r.base_unit }}</td>
+            <td>₹42.00 / kg</td>
+            <td>
+              <span class="badge {% if r.rate > '42' %}rejected{% else %}approved{% endif %}">
+                {% if r.rate > '42' %}+₹{{ (r.rate | float - 42.0) | round(2) }}/kg Shift{% else %}Stable Base{% endif %}
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p style="color: var(--text-muted); font-size: 0.88rem;">No historical purchase records found in ledger.</p>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

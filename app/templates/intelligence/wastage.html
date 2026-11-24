@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% block title %}Material Wastage Intelligence · SnackFlow ERP{% endblock %}
+{% block page_title %}{{ tr("Material Wastage") }}{% endblock %}
+{% block body %}
+<div class="wastage-container">
+
+  <!-- Summary Metric Banner -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+    <div class="card" style="border-left: 4px solid #ef4444;">
+      <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Total Wastage Financial Impact</span>
+      <div style="font-size: 1.8rem; font-weight: 800; color: #ef4444; margin: 0.2rem 0;">
+        ₹{{ data.total_wastage_cost_paise | money }}
+      </div>
+      <span style="font-size: 0.8rem; color: var(--text-secondary);">Across {{ data.runs_analyzed }} batch runs</span>
+    </div>
+
+    <div class="card" style="border-left: 4px solid #f59e0b;">
+      <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Packaging Pouch Scrap</span>
+      <div style="font-size: 1.8rem; font-weight: 800; color: #f59e0b; margin: 0.2rem 0;">
+        {{ data.total_damaged_pouches }} <span style="font-size: 0.95rem; font-weight: 500; color: var(--text-muted);">pouches</span>
+      </div>
+      <span style="font-size: 0.8rem; color: var(--text-secondary);">{{ data.pouch_damage_pct }}% of total consumption</span>
+    </div>
+
+    <div class="card" style="border-left: 4px solid #10b981;">
+      <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Good Finished Output</span>
+      <div style="font-size: 1.8rem; font-weight: 800; color: #10b981; margin: 0.2rem 0;">
+        {{ data.total_good_packets }} <span style="font-size: 0.95rem; font-weight: 500; color: var(--text-muted);">packets</span>
+      </div>
+      <span style="font-size: 0.8rem; color: var(--text-secondary);">Standard production yield</span>
+    </div>
+  </div>
+
+  <!-- Material Overconsumption Ranking -->
+  <div class="card" style="margin-bottom: 1.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0;">Material Over-Consumption Ranking</h3>
+      <a href="{{ url_for('intelligence.root_cause_analysis') }}" class="btn secondary btn-sm">Root Cause Assistant (RCA) →</a>
+    </div>
+
+    {% if data.material_ranking %}
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Material / Ingredient</th>
+            <th>Kind</th>
+            <th>Total Excess Consumed</th>
+            <th>Estimated Wastage Cost</th>
+            <th>Primary Benchmark Deviation</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in data.material_ranking %}
+          <tr>
+            <td style="font-weight: 700;">{{ m.name }}</td>
+            <td><span class="badge {{ m.kind }}">{{ m.kind | upper }}</span></td>
+            <td style="font-weight: 700; color: #ef4444;">{{ m.excess_milli | qty }} {{ m.unit }}</td>
+            <td><strong>₹{{ m.cost_paise | money }}</strong></td>
+            <td>
+              {% if m.cost_paise > 0 %}
+              <span class="badge rejected">Over Standard</span>
+              {% else %}
+              <span class="badge approved">Within Tolerance</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p style="color: var(--text-muted); font-size: 0.88rem;">No material variance recorded.</p>
+    {% endif %}
+  </div>
+
+  <!-- Batch-Level Runs Breakdown -->
+  <div class="card">
+    <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;">Batch-by-Batch Variance History</h3>
+    {% if data.summaries %}
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Run #</th>
+            <th>Batch No</th>
+            <th>Product</th>
+            <th>Yield Var %</th>
+            <th>Flagged Ingredients</th>
+            <th>Damaged Pouches</th>
+            <th>RCA Diagnostic</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in data.summaries %}
+          <tr>
+            <td style="font-weight: 700;"><a href="{{ url_for('production.run_detail', rid=s.run.id) }}">{{ s.run.run_no }}</a></td>
+            <td><code>{{ s.run.batch_no }}</code></td>
+            <td>{{ s.run.product_name }}</td>
+            <td>
+              <span class="badge {% if s.yield_flag %}rejected{% else %}approved{% endif %}">
+                {{ s.yield_var_pct }}%
+              </span>
+            </td>
+            <td>
+              {% set flagged_lines = [] %}
+              {% for l in s.lines if l.flag %}
+                <span class="badge rejected" style="font-size: 0.72rem; margin-right: 0.25rem;">{{ l.name }} ({{ l.var_pct }}%)</span>
+              {% endfor %}
+              {% if not s.any_flag %}
+                <span class="badge approved">Within 3%</span>
+              {% endif %}
+            </td>
+            <td>{{ s.run.damaged_milli | qty }}</td>
+            <td>
+              <a href="{{ url_for('intelligence.root_cause_analysis', run_id=s.run.id) }}" class="btn secondary btn-sm" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                Run RCA 🔬
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

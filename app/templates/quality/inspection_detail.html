@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block title %}Inspection {{ insp.inspection_no }} - SNACKFLOW ERP{% endblock %}
+
+{% block body %}
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Inspection {{ insp.inspection_no }}</h1>
+    <div class="page-subtitle">Quality audit and sign-off record for batch dispatch authorization.</div>
+  </div>
+  <div class="page-actions">
+    <a href="{{ url_for('quality.inspections') }}" class="btn btn-secondary">← Back to Quality Log</a>
+    {% if insp.batch_no %}
+    <a href="{{ url_for('traceability.view', batch=insp.batch_no) }}" class="btn btn-primary">🔍 Trace Batch Lifecycle</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="grid-cards-2">
+  <!-- Left Box: Inspection Details -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Inspection Particulars</div>
+      <span class="badge badge-{{ insp.status }}">{{ insp.status | upper }}</span>
+    </div>
+
+    <table class="data-table" style="border:none;">
+      <tbody>
+        <tr><td style="color:var(--text-muted); width:140px;">Item / Material:</td><td style="font-weight:600;">{{ insp.item_name }} ({{ insp.item_code }})</td></tr>
+        <tr><td style="color:var(--text-muted);">Inspection Type:</td><td>{{ insp.inspection_type | upper }}</td></tr>
+        <tr><td style="color:var(--text-muted);">Batch / Lot #:</td><td><code>{{ insp.batch_no or 'Not specified' }}</code></td></tr>
+        <tr><td style="color:var(--text-muted);">Reference:</td><td>{{ insp.reference_type }} #{{ insp.reference_id }}</td></tr>
+        <tr><td style="color:var(--text-muted);">Sample Size:</td><td>{{ insp.sample_size or 'Standard sample' }}</td></tr>
+        <tr><td style="color:var(--text-muted);">Inspector:</td><td>{{ insp.inspector_name or 'System' }}</td></tr>
+        <tr><td style="color:var(--text-muted);">Timestamp:</td><td>{{ insp.inspected_at }}</td></tr>
+        <tr><td style="color:var(--text-muted);">Defect Category:</td><td style="font-weight:600; color:{% if insp.defect_category %}var(--color-danger){% else %}var(--color-success){% endif %};">{{ insp.defect_category or 'None (Passed)' }}</td></tr>
+        <tr><td style="color:var(--text-muted);">Corrective Action:</td><td>{{ insp.corrective_action or 'No corrective action required' }}</td></tr>
+        <tr><td style="color:var(--text-muted);">Notes / Log:</td><td>{{ insp.notes or '-' }}</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Right Box: Record QA Verdict Form -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Sign-off Verdict & CAPA</div>
+    </div>
+
+    <form method="post" action="{{ url_for('quality.inspection_detail', qid=insp.id) }}">
+      <div class="form-group">
+        <label for="status">Quality Verdict</label>
+        <select name="status" id="status" required>
+          <option value="approved" {% if insp.status == 'approved' %}selected{% endif %}>✓ APPROVED (Release for Dispatch / Production)</option>
+          <option value="rejected" {% if insp.status == 'rejected' %}selected{% endif %}>✕ REJECTED (Strictly Block Dispatch & Flag Scrap)</option>
+          <option value="quarantine" {% if insp.status == 'quarantine' %}selected{% endif %}>⏸️ QUARANTINE (Hold for Further Lab Testing)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="defect_category">Defect Category (If rejected or on hold)</label>
+        <select name="defect_category" id="defect_category">
+          <option value="">None / Within Tolerances</option>
+          <option value="Moisture & Texture Defect" {% if insp.defect_category == 'Moisture & Texture Defect' %}selected{% endif %}>Moisture & Texture Defect</option>
+          <option value="Over-frying / Color Deviation" {% if insp.defect_category == 'Over-frying / Color Deviation' %}selected{% endif %}>Over-frying / Color Deviation</option>
+          <option value="Pouch Sealing / Leakage" {% if insp.defect_category == 'Pouch Sealing / Leakage' %}selected{% endif %}>Pouch Sealing / Leakage</option>
+          <option value="Weight & Packaging Variance" {% if insp.defect_category == 'Weight & Packaging Variance' %}selected{% endif %}>Weight & Packaging Variance</option>
+          <option value="Foreign Material / Contamination" {% if insp.defect_category == 'Foreign Material / Contamination' %}selected{% endif %}>Foreign Material / Contamination</option>
+          <option value="Rancidity / Off-Flavor" {% if insp.defect_category == 'Rancidity / Off-Flavor' %}selected{% endif %}>Rancidity / Off-Flavor</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="defect_description">Defect Description</label>
+        <textarea name="defect_description" id="defect_description" rows="2" placeholder="Specific observation during sensory or lab check...">{{ insp.defect_description or '' }}</textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="corrective_action">Corrective & Preventive Action (CAPA)</label>
+        <textarea name="corrective_action" id="corrective_action" rows="2" placeholder="Immediate containment and root cause fix...">{{ insp.corrective_action or '' }}</textarea>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width:100%; margin-top:0.5rem;">
+        Update Quality Verdict & Sign Off
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

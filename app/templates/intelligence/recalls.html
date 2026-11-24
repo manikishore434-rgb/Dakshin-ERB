@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% block title %}Smart Batch Recall Management · SnackFlow ERP{% endblock %}
+{% block page_title %}{{ tr("Batch Recall") }}{% endblock %}
+{% block body %}
+<div class="recalls-container">
+
+  <div class="card" style="margin-bottom: 1.5rem; border-left: 4px solid #ef4444;">
+    <h2 style="font-size: 1.4rem; font-weight: 800; margin: 0; color: #ef4444;">Statutory Food Safety Batch Recall Protocol</h2>
+    <p style="color: var(--text-secondary); font-size: 0.88rem; margin: 0.25rem 0 0;">
+      Instant identification of downstream customers, invoices, and quantities tied to suspect manufacturing batches.
+    </p>
+  </div>
+
+  <!-- Form to Initiate Recall -->
+  <div class="card" style="margin-bottom: 1.5rem;">
+    <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;">Initiate Quality Batch Recall</h3>
+    <form method="post" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.75rem; align-items: flex-end;">
+      <div class="form-group" style="margin: 0;">
+        <label>Suspect Batch Number</label>
+        <select name="batch_no" required>
+          {% for b in batches %}
+          <option value="{{ b.batch_no }}">{{ b.batch_no }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group" style="margin: 0;">
+        <label>Severity Level</label>
+        <select name="severity" required>
+          <option value="critical">Critical (FSSAI Class I - Immediate Health Risk)</option>
+          <option value="major">Major (Class II - Packaging / Flavor Defect)</option>
+          <option value="minor">Minor (Class III - Label / Weight Deviation)</option>
+        </select>
+      </div>
+
+      <div class="form-group" style="margin: 0;">
+        <label>Reason / Defect Root Cause</label>
+        <input type="text" name="reason" placeholder="e.g. Moisture ingress, rancidity in oil" required>
+      </div>
+
+      <div>
+        <button type="submit" class="btn" style="background: #ef4444; border-color: #ef4444; width: 100%;">
+          Initiate Recall Protocol ⚠️
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- List of Active Recalls -->
+  <div class="card">
+    <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;">Active & Historical Recalls</h3>
+    {% if recalls %}
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Protocol #</th>
+            <th>Batch No</th>
+            <th>Product</th>
+            <th>Date</th>
+            <th>Severity</th>
+            <th>Affected Units</th>
+            <th>Status</th>
+            <th>Trace Lineage</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in recalls %}
+          <tr>
+            <td style="font-weight: 700;">{{ r.recall_no }}</td>
+            <td><code>{{ r.batch_no }}</code></td>
+            <td>{{ r.product_name }}</td>
+            <td>{{ r.date }}</td>
+            <td>
+              <span class="badge {% if r.severity == 'critical' %}rejected{% elif r.severity == 'major' %}submitted{% else %}invoiced{% endif %}">
+                {{ r.severity | upper }}
+              </span>
+            </td>
+            <td><strong>{{ r.affected_qty_milli | qty }} pkts</strong></td>
+            <td><span class="badge rejected">{{ r.status | upper }}</span></td>
+            <td>
+              <a href="{{ url_for('intelligence.traceability') }}?q={{ r.batch_no }}" class="btn secondary btn-sm" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                Customer Lineage 🔍
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p style="color: var(--text-muted); font-size: 0.88rem;">No quality batch recalls initiated. Operations operating normally.</p>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,47 @@
+name: CI/CD Pipeline - Dakshin ERP (SnackFlow)
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    name: Automated Quality & Compliance Verification
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt gunicorn
+
+      - name: Run Full Enterprise Test Suite (50 Tests)
+        env:
+          PYTHONPATH: "."
+          AUTO_SEED: "0"
+        run: |
+          python -m unittest discover -s tests -v
+
+      - name: Verify NIT Trichy Section 5 Benchmark (14/14 Checks)
+        env:
+          PYTHONPATH: "."
+        run: |
+          python -m app.benchmark
+
+      - name: Verify Web Service Health Check Endpoint
+        run: |
+          python -c "from app import create_app; app = create_app(':memory:'); client = app.test_client(); res = client.get('/health'); assert res.status_code == 200; assert res.json['status'] == 'healthy'"
